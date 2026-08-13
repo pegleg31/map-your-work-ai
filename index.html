@@ -1,0 +1,1760 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Map your work and find where AI fits your role - an SNHU AI in 20 tool." />
+<meta name="color-scheme" content="light dark" />
+<title>Map Your Work With AI Tools - SNHU</title>
+</head>
+<body><style>
+  /* ============================================================
+     SNHU · Map Your Work — AI in 20, Week Five
+     Self-contained artifact for SharePoint embedding
+     ============================================================ */
+
+  :root {
+    /* Brand palette */
+    --ink:#00244e; --gold:#fdb913; --heritage:#0a3370; --sky:#009dea;
+    --deep-yellow:#e28e03; --soft-yellow:#ffd04d; --impact:#00559a;
+    --soft-blue:#e6f0f7; --warm-brown:#a55b00; --parchment:#f4f0ec;
+    --white:#ffffff; --warm-black:#1d1c18;
+
+    /* Decision-matrix semantic hues (glyphs carry meaning; color reinforces) */
+    --star:#fdb913; --question:#009dea; --heart:#e0457b; --xout:#c23b2e;
+
+    /* Semantic tokens — LIGHT (default) */
+    --bg:#f4f0ec;
+    --surface:#ffffff;
+    --surface-2:#faf7f3;
+    --text:#1d1c18;
+    --text-soft:#5b5e6b;
+    --text-faint:#8a8d99;
+    --border:#e5ddd2;
+    --border-strong:#d5cabb;
+    --accent:#fdb913;
+    --root-bg:#00244e;
+    --root-ring:#fdb913;
+    --root-text:#ffffff;
+    --tab-active:#00244e;
+    --tab-active-text:#ffffff;
+    --canvas-bg:#fbfaf8;
+    --canvas-grid:rgba(0,36,78,.05);
+    --chip-bg:#f0ece5;
+    --shadow-sm:0 1px 2px rgba(29,28,24,.06),0 1px 1px rgba(29,28,24,.04);
+    --shadow-md:0 6px 20px rgba(0,36,78,.10),0 2px 6px rgba(0,36,78,.06);
+    --shadow-lg:0 24px 60px rgba(0,36,78,.22);
+    --focus:#00559a;
+
+    --font:'Inter','Segoe UI',Arial,system-ui,sans-serif;
+    --r-sm:8px; --r-md:12px; --r-lg:18px; --r-pill:999px;
+    --maxw:1240px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0a1626;
+      --surface:#0f2140;
+      --surface-2:#132a4f;
+      --text:#eef3fa;
+      --text-soft:#a9b8d0;
+      --text-faint:#7c8db0;
+      --border:#213a63;
+      --border-strong:#2c4a7a;
+      --accent:#fdb913;
+      --root-bg:#fdb913;
+      --root-ring:#00244e;
+      --root-text:#00244e;
+      --tab-active:#fdb913;
+      --tab-active-text:#00244e;
+      --canvas-bg:#0b1a30;
+      --canvas-grid:rgba(255,255,255,.045);
+      --chip-bg:#16305a;
+      --soft-blue:#16305a;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+      --shadow-md:0 6px 22px rgba(0,0,0,.5);
+      --shadow-lg:0 24px 60px rgba(0,0,0,.6);
+      --focus:#57b6f0;
+    }
+  }
+  /* Explicit toggle overrides media query in both directions */
+  :root[data-theme="light"] {
+    --bg:#f4f0ec; --surface:#ffffff; --surface-2:#faf7f3; --text:#1d1c18;
+    --text-soft:#5b5e6b; --text-faint:#8a8d99; --border:#e5ddd2; --border-strong:#d5cabb;
+    --accent:#fdb913; --root-bg:#00244e; --root-ring:#fdb913; --root-text:#ffffff;
+    --tab-active:#00244e; --tab-active-text:#ffffff; --canvas-bg:#fbfaf8;
+    --canvas-grid:rgba(0,36,78,.05); --chip-bg:#f0ece5; --soft-blue:#e6f0f7; --focus:#00559a;
+    --shadow-sm:0 1px 2px rgba(29,28,24,.06),0 1px 1px rgba(29,28,24,.04);
+    --shadow-md:0 6px 20px rgba(0,36,78,.10),0 2px 6px rgba(0,36,78,.06);
+    --shadow-lg:0 24px 60px rgba(0,36,78,.22);
+  }
+  :root[data-theme="dark"] {
+    --bg:#0a1626; --surface:#0f2140; --surface-2:#132a4f; --text:#eef3fa;
+    --text-soft:#a9b8d0; --text-faint:#7c8db0; --border:#213a63; --border-strong:#2c4a7a;
+    --accent:#fdb913; --root-bg:#fdb913; --root-ring:#00244e; --root-text:#00244e;
+    --tab-active:#fdb913; --tab-active-text:#00244e; --canvas-bg:#0b1a30;
+    --canvas-grid:rgba(255,255,255,.045); --chip-bg:#16305a; --soft-blue:#16305a; --focus:#57b6f0;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 6px 22px rgba(0,0,0,.5);
+    --shadow-lg:0 24px 60px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing:border-box; }
+  body { margin:0; }
+
+  .app {
+    font-family:var(--font);
+    color:var(--text);
+    background:var(--bg);
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .app *:focus-visible {
+    outline:2.5px solid var(--focus);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+  button { font-family:inherit; cursor:pointer; }
+
+  /* ---------- Header ---------- */
+  .top {
+    display:flex; align-items:center; gap:16px;
+    padding:12px 20px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+  .brand-logo { display:inline-flex; align-items:center; background:#fff; border-radius:8px; padding:6px 13px; flex:none; }
+  .brand-logo img { height:64px; width:auto; display:block; }
+  .brand-sep2 { width:1px; align-self:stretch; background:var(--border-strong); margin:8px 0; }
+  .brand-title { display:flex; flex-direction:column; line-height:1.05; white-space:nowrap; }
+  .brand-title .bt-main { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-.01em; }
+  .brand-title .bt-sub { font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--text-soft); margin-top:2px; }
+
+  .role-field { display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap; }
+  .role-label { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); font-weight:700; }
+  .role-pill {
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--ink); color:#fff;
+    padding:6px 12px 6px 14px; border-radius:var(--r-pill);
+    font-weight:700; font-size:14px; border:none; max-width:44ch;
+  }
+  :root[data-theme="dark"] .role-pill { background:var(--heritage); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .role-pill { background:var(--heritage);} }
+  .role-pill .rp-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .role-pill .rp-edit { opacity:.8; font-size:12px; }
+  .role-pill:hover .rp-edit { opacity:1; }
+
+  .icon-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:10px;
+    background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text-soft); font-size:16px; line-height:1;
+  }
+  .icon-btn:hover { border-color:var(--border-strong); color:var(--text); }
+  .header-tools { display:flex; gap:8px; }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    display:flex; gap:4px; padding:0 20px;
+    background:var(--surface); border-bottom:1px solid var(--border);
+    overflow-x:auto;
+  }
+  .tab {
+    position:relative; border:none; background:none;
+    padding:13px 16px 12px; font-size:14px; font-weight:600;
+    color:var(--text-soft); white-space:nowrap; border-radius:8px 8px 0 0;
+    display:flex; align-items:center; gap:9px;
+  }
+  .tab:hover { color:var(--text); }
+  .tab[aria-selected="true"] { color:var(--text); font-weight:700; }
+  .tab[aria-selected="true"]::after {
+    content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:3px;
+    background:var(--gold); border-radius:3px 3px 0 0;
+  }
+  .tab .num {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:50%; font-size:11px; font-weight:800;
+    background:var(--chip-bg); color:var(--text-soft);
+  }
+  .tab[aria-selected="true"] .num { background:var(--ink); color:#fff; }
+  :root[data-theme="dark"] .tab[aria-selected="true"] .num { background:var(--gold); color:var(--ink); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .tab[aria-selected="true"] .num { background:var(--gold); color:var(--ink);} }
+
+  /* ---------- Main / views ---------- */
+  main { flex:1; display:flex; flex-direction:column; min-height:0; }
+  .view { display:none; flex:1; min-height:0; }
+  .view.active { display:flex; flex-direction:column; }
+
+  /* ---------- Map toolbar ---------- */
+  .maptoolbar {
+    display:flex; align-items:center; gap:10px 18px; flex-wrap:wrap;
+    padding:10px 20px; background:var(--surface-2);
+    border-bottom:1px solid var(--border);
+  }
+  .legend { display:flex; gap:6px 14px; flex-wrap:wrap; align-items:center; }
+  .legend .lg-title { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); font-weight:700; margin-right:2px; }
+  .lg { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-soft); }
+  .lg .sym { width:20px; height:20px; }
+  .lg b { color:var(--text); font-weight:700; }
+  .lvl-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .lvl-arrow { color:var(--text-faint); font-size:12px; }
+
+  .zoombar { margin-left:auto; display:flex; align-items:center; gap:6px; }
+  .zoombar .zbtn {
+    width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); font-size:16px; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .zoombar .zbtn:hover { border-color:var(--border-strong); }
+  .zoombar .zpct { font-size:12px; color:var(--text-soft); width:44px; text-align:center; font-variant-numeric:tabular-nums; }
+
+  /* ---------- Canvas ---------- */
+  .canvas {
+    position:relative; flex:1; overflow:auto; min-height:0;
+    background-color:var(--canvas-bg);
+    background-image:radial-gradient(var(--canvas-grid) 1.4px, transparent 1.4px);
+    background-size:22px 22px;
+  }
+  .canvas-inner {
+    position:relative;
+    transform-origin:0 0;
+    padding:40px 60px 80px 40px;
+    width:max-content; min-width:100%;
+    display:flex; align-items:center;
+  }
+  svg.connectors { position:absolute; top:0; left:0; pointer-events:none; overflow:visible; z-index:0; }
+
+  /* tree structure */
+  .branch { display:flex; align-items:center; position:relative; z-index:1; }
+  .children { display:flex; flex-direction:column; gap:14px; margin-left:54px; }
+  .children:empty { margin-left:0; }
+
+  /* node card */
+  .node {
+    position:relative; z-index:2;
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:2px solid var(--bc,#ccc);
+    border-radius:12px; padding:8px 11px;
+    box-shadow:var(--shadow-sm);
+    max-width:260px;
+    transition:box-shadow .15s, transform .12s;
+  }
+  .node:hover { box-shadow:var(--shadow-md); }
+  .node.cat {
+    color:#fff; border:none;
+    background:var(--bc); font-weight:700;
+    box-shadow:0 4px 12px color-mix(in srgb, var(--bc) 40%, transparent);
+  }
+  .node.cat .node-text { color:#fff; }
+  .node.cat .node-text:empty::before { color:rgba(255,255,255,.7); }
+
+  .node-text {
+    outline:none; font-size:13.5px; line-height:1.35; color:var(--text);
+    min-width:60px; max-width:200px; word-break:break-word; font-weight:500;
+  }
+  .node-text:empty::before { content:attr(data-ph); color:var(--text-faint); font-weight:400; }
+  .node.tagged { border-color:var(--tagc); }
+
+  .tagbadge {
+    width:22px; height:22px; flex:none;
+    display:none; align-items:center; justify-content:center;
+  }
+  .node.tagged .tagbadge { display:inline-flex; }
+
+  .node-tools {
+    display:flex; align-items:center; gap:2px;
+    margin-left:2px;
+    opacity:0; transition:opacity .12s;
+  }
+  .node:hover .node-tools, .node:focus-within .node-tools { opacity:1; }
+  @media (hover:none){ .node-tools { opacity:1; } }
+  .nt {
+    width:26px; height:26px; border-radius:7px; border:none;
+    background:transparent; color:var(--text-faint);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:13px; line-height:1;
+  }
+  .node.cat .nt { color:rgba(255,255,255,.85); }
+  .nt:hover { background:color-mix(in srgb, var(--text-soft) 18%, transparent); color:var(--text); }
+  .node.cat .nt:hover { background:rgba(255,255,255,.2); color:#fff; }
+  .nt.add { color:#fff; background:var(--gold); }
+  .nt.add:hover { background:var(--deep-yellow); }
+  .node.cat .nt.add { background:rgba(255,255,255,.22); }
+  .node.cat .nt.add:hover { background:rgba(255,255,255,.38); }
+
+  /* root node */
+  .node.root {
+    background:var(--root-bg); color:var(--root-text);
+    border:none; border-radius:var(--r-pill);
+    padding:0; width:132px; height:132px; max-width:none;
+    flex-direction:column; text-align:center; gap:4px;
+    box-shadow:0 0 0 6px color-mix(in srgb,var(--root-ring) 22%, transparent), var(--shadow-md);
+    justify-content:center;
+  }
+  .node.root .rt-label { font-size:10px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; font-weight:700; }
+  .node.root .node-text { color:var(--root-text); font-weight:800; font-size:15px; max-width:104px; text-align:center; }
+  .node.root .node-text:empty::before { color:color-mix(in srgb,var(--root-text) 60%, transparent); }
+  .node.root .nt.add {
+    position:absolute; right:-10px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; border-radius:50%; background:var(--gold); color:var(--ink);
+    box-shadow:var(--shadow-sm); font-size:16px;
+  }
+  .node.root .nt.add:hover { background:var(--soft-yellow); }
+
+  /* tag popover */
+  .tagpop {
+    position:absolute; z-index:50;
+    background:var(--surface); border:1px solid var(--border-strong);
+    border-radius:12px; box-shadow:var(--shadow-lg); padding:6px;
+    display:grid; grid-template-columns:repeat(2,1fr); gap:4px; width:230px;
+  }
+  .tagpop button {
+    display:flex; align-items:center; gap:9px; text-align:left;
+    border:1px solid transparent; background:var(--surface-2);
+    border-radius:9px; padding:8px 9px; color:var(--text); font-size:12px; font-weight:600;
+  }
+  .tagpop button:hover { border-color:var(--border-strong); }
+  .tagpop button .sym { width:22px; height:22px; flex:none; }
+  .tagpop button small { display:block; font-weight:400; color:var(--text-soft); font-size:10.5px; }
+  .tagpop .clear { grid-column:span 2; justify-content:center; background:transparent; color:var(--text-soft); font-weight:600; }
+  .tagpop .clear:hover { background:var(--chip-bg); }
+
+  /* symbol glyphs (SVG) */
+  .sym { display:inline-block; vertical-align:middle; }
+
+  /* empty hint on canvas */
+  .canvas-hint {
+    position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);
+    text-align:center; color:var(--text-faint); pointer-events:none; max-width:320px;
+  }
+
+  /* ---------- Scroll panels (Prioritize / Brainstorm) ---------- */
+  .scroller { flex:1; overflow:auto; }
+  .wrap { max-width:var(--maxw); margin:0 auto; padding:28px 24px 64px; }
+  .lead { max-width:64ch; }
+  .eyebrow { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--deep-yellow); font-weight:800; }
+  h2.vh { font-size:26px; font-weight:800; letter-spacing:-.02em; margin:6px 0 6px; text-wrap:balance; }
+  .vsub { color:var(--text-soft); margin:0 0 22px; }
+
+  /* AI opportunity banner */
+  .opp {
+    display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:26px;
+  }
+  .opp-card {
+    border-radius:var(--r-lg); padding:18px 20px; border:1px solid var(--border);
+    background:var(--surface); box-shadow:var(--shadow-sm);
+  }
+  .opp-card.primary {
+    background:linear-gradient(135deg, var(--ink), var(--heritage));
+    color:#fff; border:none; box-shadow:var(--shadow-md);
+  }
+  .opp-card.primary .oc-h, .opp-card.primary .oc-n { color:#fff; }
+  .opp-card .oc-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .opp-card .oc-h { font-size:13px; font-weight:800; letter-spacing:.02em; }
+  .opp-card .oc-n { font-size:34px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+  .opp-card .oc-sub { font-size:12.5px; opacity:.85; }
+  .opp-card.primary .oc-sub { color:rgba(255,255,255,.85); }
+  .opp-card .badge-gold { background:var(--gold); color:var(--ink); border-radius:var(--r-pill); font-size:10px; font-weight:800; padding:3px 9px; letter-spacing:.06em; text-transform:uppercase; }
+
+  /* buckets */
+  .buckets { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .bucket { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow-sm); }
+  .bucket-h { padding:12px 14px; border-top:4px solid var(--bkc); display:flex; align-items:center; gap:9px; }
+  .bucket-h .sym { width:24px; height:24px; }
+  .bucket-h .bk-t { font-weight:800; font-size:13.5px; }
+  .bucket-h .bk-s { font-size:11px; color:var(--text-soft); }
+  .bucket-h .bk-c { margin-left:auto; font-size:13px; font-weight:800; color:var(--bkc); font-variant-numeric:tabular-nums; }
+  .bucket-verdict { font-size:11px; padding:5px 14px; background:var(--surface-2); color:var(--text-soft); border-bottom:1px solid var(--border); font-weight:600; }
+  .bucket ul { list-style:none; margin:0; padding:8px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .bucket li { background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; }
+  .bucket li .li-cat { display:block; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:800; margin-bottom:2px; color:var(--lic); }
+  .bucket .empty { color:var(--text-faint); font-size:12px; padding:14px 10px; text-align:center; font-style:italic; }
+
+  /* Brainstorm */
+  .bs-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
+  .panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); overflow:hidden; }
+  .panel-h { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--surface-2); }
+  .panel-h .step { width:26px; height:26px; border-radius:50%; background:var(--ink); color:#fff; font-weight:800; font-size:13px; display:inline-flex; align-items:center; justify-content:center; }
+  :root[data-theme="dark"] .panel-h .step { background:var(--gold); color:var(--ink); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .panel-h .step { background:var(--gold); color:var(--ink);} }
+  .panel-h .ph-t { font-weight:800; font-size:15px; }
+  .panel-h .ph-s { font-size:12px; color:var(--text-soft); }
+  .panel-b { padding:16px 18px; }
+  .prompt-box {
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md);
+    padding:14px; font-size:12.5px; line-height:1.55; color:var(--text);
+    white-space:pre-wrap; max-height:340px; overflow:auto; font-family:var(--font);
+  }
+  textarea.paste {
+    width:100%; min-height:150px; resize:vertical; border-radius:var(--r-md);
+    border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text);
+    padding:12px 14px; font-family:var(--font); font-size:13px; line-height:1.5;
+  }
+  .helper { font-size:12.5px; color:var(--text-soft); margin:2px 0 14px; }
+
+  /* buttons */
+  .btn {
+    display:inline-flex; align-items:center; gap:8px; justify-content:center;
+    border-radius:10px; padding:10px 16px; font-size:13.5px; font-weight:700;
+    border:1px solid transparent; background:var(--surface-2); color:var(--text);
+    border-color:var(--border);
+  }
+  .btn:hover { border-color:var(--border-strong); }
+  .btn.primary { background:var(--ink); color:#fff; border:none; }
+  .btn.primary:hover { background:var(--heritage); }
+  .btn.gold { background:var(--gold); color:var(--ink); border:none; }
+  .btn.gold:hover { background:var(--deep-yellow); }
+  .btn.sm { padding:7px 12px; font-size:12.5px; }
+  .btn-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .btn:disabled { opacity:.5; cursor:default; }
+
+  /* ---------- Overlay (role setup + confirm) ---------- */
+  .overlay {
+    position:fixed; inset:0; z-index:100; display:none;
+    align-items:center; justify-content:center; padding:20px;
+    background:color-mix(in srgb, var(--ink) 55%, transparent);
+    backdrop-filter:blur(3px);
+  }
+  .overlay.show { display:flex; }
+  .modal {
+    background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--shadow-lg);
+    max-width:520px; width:100%; overflow:auto; max-height:94vh; border:1px solid var(--border);
+  }
+  .modal-top { background:linear-gradient(135deg,var(--ink),var(--heritage)); padding:22px 26px 20px; color:#fff; position:relative; }
+  .modal-top .mt-eye { font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); font-weight:800; }
+  .modal-top h1 { font-size:24px; margin:6px 0 4px; font-weight:800; letter-spacing:-.02em; }
+  .modal-top p { margin:0; font-size:13.5px; color:rgba(255,255,255,.82); max-width:44ch; }
+  .modal-body { padding:22px 26px 24px; }
+  .field-label { display:block; font-size:12px; font-weight:700; color:var(--text); margin:0 0 6px; }
+  .field-hint { font-size:11.5px; color:var(--text-soft); margin:9px 0 12px; }
+  .txt {
+    width:100%; border:1px solid var(--border-strong); border-radius:10px;
+    padding:12px 14px; font-size:15px; font-family:var(--font); background:var(--surface-2); color:var(--text);
+  }
+  .txt::placeholder { color:var(--text-faint); }
+  .seed-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:11px 0 8px; }
+  .seed-opt {
+    position:relative; border:1.5px solid var(--border); border-radius:11px; padding:10px 11px;
+    background:var(--surface-2); text-align:left; color:var(--text);
+  }
+  .seed-opt:hover { border-color:var(--border-strong); }
+  .seed-opt.sel { border-color:var(--ink); background:color-mix(in srgb,var(--ink) 7%, var(--surface)); }
+  :root[data-theme="dark"] .seed-opt.sel { border-color:var(--gold); background:color-mix(in srgb,var(--gold) 12%, var(--surface)); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .seed-opt.sel { border-color:var(--gold); background:color-mix(in srgb,var(--gold) 12%, var(--surface)); } }
+  .seed-opt.sel::after { content:"✓"; position:absolute; top:7px; right:9px; font-size:10px; font-weight:800; color:var(--ink); }
+  :root[data-theme="dark"] .seed-opt.sel::after { color:var(--gold); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .seed-opt.sel::after { color:var(--gold); } }
+  .seed-opt .so-t { font-weight:800; font-size:12.5px; display:block; line-height:1.25; padding-right:12px; }
+  .seed-opt .so-d { font-size:10px; color:var(--text-soft); margin-top:3px; display:block; line-height:1.3; }
+  .seed-note { font-size:11.5px; color:var(--text-soft); min-height:1.1em; line-height:1.4; }
+  .seed-note b { color:var(--text); font-weight:700; }
+  @media (max-width:520px){ .seed-grid { grid-template-columns:repeat(2,1fr); } }
+  .modal-actions { display:flex; gap:10px; margin-top:18px; }
+  .modal-actions .btn { flex:1; }
+  .modal-x { position:absolute; top:14px; right:14px; background:rgba(255,255,255,.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; font-size:16px; }
+  .modal-x:hover { background:rgba(255,255,255,.3); }
+
+  /* toast */
+  .toast {
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:11px 20px; border-radius:var(--r-pill);
+    font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); z-index:200;
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .save-state { font-size:11.5px; color:var(--text-faint); display:inline-flex; align-items:center; gap:5px; }
+  .save-state .dot { width:7px; height:7px; border-radius:50%; background:#43a047; }
+
+  /* footer */
+  .foot { padding:10px 20px; border-top:1px solid var(--border); background:var(--surface); font-size:11px; color:var(--text-faint); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+
+  /* how-it-works collapsible */
+  .how { border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); margin-bottom:20px; overflow:hidden; }
+  .how summary { padding:13px 16px; font-weight:700; font-size:13.5px; cursor:pointer; list-style:none; display:flex; align-items:center; gap:9px; }
+  .how summary::-webkit-details-marker { display:none; }
+  .how summary .chev { margin-left:auto; transition:transform .2s; color:var(--text-soft); }
+  .how[open] summary .chev { transform:rotate(90deg); }
+  .how-body { padding:2px 16px 16px; font-size:13px; color:var(--text-soft); }
+  .how-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:6px; }
+  .how-step { background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:11px 13px; }
+  .how-step .hs-n { font-size:10px; letter-spacing:.1em; text-transform:uppercase; font-weight:800; color:var(--lvlc); }
+  .how-step .hs-t { font-weight:700; color:var(--text); font-size:13px; margin:2px 0; }
+
+  /* ---------- Info icons, tooltips, info cards ---------- */
+  .info-i {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:18px; height:18px; border-radius:50%; flex:none; vertical-align:middle;
+    background:var(--chip-bg); color:var(--text-soft); cursor:pointer;
+    font-size:11px; font-weight:700; border:none; font-style:italic;
+    font-family:Georgia,'Times New Roman',serif; line-height:1;
+  }
+  .info-i:hover { background:var(--ink); color:#fff; }
+  :root[data-theme="dark"] .info-i:hover { background:var(--gold); color:var(--ink); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .info-i:hover { background:var(--gold); color:var(--ink);} }
+  .info-i.on-dark { background:rgba(255,255,255,.22); color:#fff; }
+  .info-i.on-dark:hover { background:#fff; color:var(--ink); }
+
+  .infocard {
+    position:fixed; z-index:120; width:308px; max-width:88vw;
+    background:var(--surface); border:1px solid var(--border-strong);
+    border-radius:14px; box-shadow:var(--shadow-lg); padding:16px 18px 15px; color:var(--text);
+  }
+  .infocard .ic-tag { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--deep-yellow); font-weight:800; }
+  .infocard h4 { margin:5px 0 8px; font-size:15.5px; font-weight:800; letter-spacing:-.01em; padding-right:18px; }
+  .infocard p { margin:0 0 9px; font-size:13px; line-height:1.55; color:var(--text-soft); }
+  .infocard p:last-child { margin-bottom:0; }
+  .infocard p b { color:var(--text); font-weight:700; }
+  .infocard .ic-x { position:absolute; top:11px; right:11px; border:none; background:transparent; color:var(--text-faint); font-size:13px; width:24px; height:24px; border-radius:6px; }
+  .infocard .ic-x:hover { background:var(--chip-bg); color:var(--text); }
+  .infocard .ic-syms { display:flex; gap:8px; margin:2px 0 10px; }
+  .infocard .ic-syms .sym { width:22px; height:22px; }
+
+  .tip {
+    position:fixed; z-index:400; pointer-events:none;
+    background:var(--warm-black); color:#fff; font-size:11.5px; font-weight:600;
+    padding:6px 10px; border-radius:7px; max-width:220px; line-height:1.4;
+    box-shadow:var(--shadow-md); opacity:0; transform:translateY(3px);
+    transition:opacity .12s, transform .12s;
+  }
+  :root[data-theme="dark"] .tip { background:#05070c; border:1px solid var(--border); }
+  .tip.show { opacity:1; transform:translateY(0); }
+
+  /* ---------- Intro tour ---------- */
+  .intro-steps { display:flex; gap:6px; margin:0 0 16px; }
+  .intro-dot { width:8px; height:8px; border-radius:50%; background:var(--border-strong); transition:width .2s, background .2s; }
+  .intro-dot.on { background:var(--gold); width:22px; border-radius:4px; }
+  .intro-syms { display:flex; gap:10px; margin:14px 0 2px; }
+  .intro-sym { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:10px 4px; }
+  .intro-sym .sym { width:24px; height:24px; }
+  .intro-sym b { font-size:11px; }
+  .intro-sym small { font-size:10px; color:var(--text-soft); text-align:center; line-height:1.25; }
+  .intro-skip { position:absolute; top:14px; right:16px; background:rgba(255,255,255,.16); border:none; color:#fff; font-size:12px; font-weight:600; padding:5px 11px; border-radius:8px; }
+  .intro-skip:hover { background:rgba(255,255,255,.32); }
+  .modal-actions .btn.ghost { flex:0 0 auto; background:transparent; border-color:var(--border); }
+
+  /* ---------- Compact Prioritize (step 2) ---------- */
+  #view-prioritize .vh { font-size:21px; }
+  #view-prioritize .vsub { font-size:13px; margin-bottom:16px; }
+  #view-prioritize .wrap { padding-top:22px; }
+  .summary-strip { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
+  .ss-primary {
+    flex:2 1 280px; display:flex; align-items:center; gap:15px;
+    background:linear-gradient(135deg,var(--ink),var(--heritage)); color:#fff;
+    border-radius:14px; padding:13px 18px; box-shadow:var(--shadow-md);
+  }
+  .ss-primary .ss-n { font-size:32px; font-weight:800; line-height:.95; font-variant-numeric:tabular-nums; }
+  .ss-primary .ss-h { font-weight:800; font-size:11px; letter-spacing:.05em; text-transform:uppercase; display:flex; align-items:center; gap:7px; margin-bottom:3px; }
+  .ss-primary .ss-h .sym { width:17px; height:17px; }
+  .ss-primary .ss-txt { font-size:11.5px; color:rgba(255,255,255,.82); line-height:1.4; }
+  .ss-primary .badge-gold { background:var(--gold); color:var(--ink); border-radius:var(--r-pill); font-size:9px; font-weight:800; padding:3px 8px; letter-spacing:.06em; text-transform:uppercase; }
+  .ss-stats { display:flex; gap:9px; flex:3 1 320px; }
+  .ss-chip { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--scc); border-radius:11px; padding:9px 4px; box-shadow:var(--shadow-sm); }
+  .ss-chip .sym { width:19px; height:19px; }
+  .ss-chip .c { font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text); line-height:1; }
+  .ss-chip .l { font-size:9.5px; color:var(--text-soft); font-weight:700; text-align:center; letter-spacing:.02em; }
+
+  #view-prioritize .bucket-h { padding:9px 12px; }
+  #view-prioritize .bucket-h .sym { width:20px; height:20px; }
+  #view-prioritize .bucket-h .bk-t { font-size:12.5px; }
+  #view-prioritize .bucket-h .bk-s { font-size:10px; }
+  #view-prioritize .bucket-verdict { font-size:10px; padding:4px 12px; }
+  #view-prioritize .bucket ul { padding:6px; gap:5px; }
+  #view-prioritize .bucket li { font-size:11.5px; padding:6px 9px; }
+  #view-prioritize .bucket li .li-cat { font-size:9px; }
+
+  @media (max-width:760px){ .ss-stats { flex-basis:100%; } }
+
+  /* ---------- Ranking list (step 3) ---------- */
+  .rank-legend { display:flex; flex-wrap:wrap; align-items:center; gap:7px 16px; padding:10px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; margin-bottom:14px; }
+  .rank-legend .lg-title { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); font-weight:800; }
+  .rank-legend .rl-item { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-soft); }
+  .rank-legend .rl-item .sym { width:18px; height:18px; }
+  .rank-legend .rl-item b { color:var(--text); font-weight:700; }
+  .rank-list { display:flex; flex-direction:column; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--surface); margin-bottom:26px; box-shadow:var(--shadow-sm); }
+  .rank-cat { padding:9px 14px 6px; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:800; color:var(--rcc,var(--text-soft)); background:var(--surface-2); border-top:1px solid var(--border); }
+  .rank-cat:first-child { border-top:none; }
+  .rank-row { display:flex; align-items:center; gap:10px; padding:7px 14px; border-top:1px solid var(--border); }
+  .rank-row:hover { background:var(--surface-2); }
+  .rank-row.is-cat { background:var(--surface-2); }
+  .rank-text { flex:1; font-size:13px; min-width:0; word-break:break-word; }
+  .rank-row.is-cat .rank-text { font-weight:700; }
+  .rank-tags { display:flex; gap:4px; flex:none; }
+  .rt-btn { width:29px; height:29px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); display:inline-flex; align-items:center; justify-content:center; opacity:.45; transition:opacity .12s, border-color .12s; }
+  .rt-btn .sym { width:17px; height:17px; }
+  .rt-btn:hover { opacity:.95; border-color:var(--border-strong); }
+  .rt-btn.on { opacity:1; border-color:var(--rtc); background:color-mix(in srgb, var(--rtc) 15%, var(--surface)); box-shadow:0 0 0 1.5px var(--rtc); }
+  .rank-empty { padding:20px 14px; text-align:center; color:var(--text-faint); font-size:13px; font-style:italic; }
+  .results-h { font-size:16px; font-weight:800; margin:4px 0 12px; letter-spacing:-.01em; }
+  @media (max-width:560px){ .rank-row { flex-wrap:wrap; gap:6px; } .rank-tags { margin-left:auto; } }
+
+  @media (max-width:860px){
+    .opp { grid-template-columns:1fr; }
+    .buckets { grid-template-columns:1fr 1fr; }
+    .bs-grid { grid-template-columns:1fr; }
+    .how-steps { grid-template-columns:1fr; }
+    .brand-logo img { height:54px; }
+    .brand-title .bt-main { font-size:16px; }
+    .brand-title .bt-sub { font-size:10px; }
+  }
+  @media (max-width:560px){
+    .buckets { grid-template-columns:1fr; }
+    .brand-logo img { height:46px; }
+    .brand-title, .brand-sep2 { display:none; }
+    .top { padding:10px 14px; }
+    .tabs, .maptoolbar, .wrap { padding-left:14px; padding-right:14px; }
+    .role-field { width:100%; margin-left:0; }
+  }
+  @media (prefers-reduced-motion:reduce){ * { transition:none !important; } }
+</style>
+
+<div class="app" id="app">
+  <!-- Header -->
+  <header class="top">
+    <div class="brand">
+      <span class="brand-logo"><img id="brandLogo" src="data:image/jpeg;base64,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" alt="Southern New Hampshire University — Artificial Intelligence" /></span>
+      <span class="brand-sep2" aria-hidden="true"></span>
+      <span class="brand-title"><span class="bt-main">Map Your Work</span><span class="bt-sub">With AI Tools</span></span>
+    </div>
+
+    <div class="role-field">
+      <span class="role-label">Your role</span>
+      <button class="role-pill" id="rolePill" title="Edit your role">
+        <span class="rp-text" id="rolePillText">Set your role</span>
+        <span class="rp-edit">✎</span>
+      </button>
+    </div>
+
+    <div class="header-tools">
+      <button class="icon-btn" id="startOverBtn" data-tip="Start over — clear the map" aria-label="Start over">↺</button>
+      <button class="icon-btn" id="helpBtn" data-tip="How this works — replay the intro" aria-label="How this works">?</button>
+      <button class="icon-btn" id="themeBtn" data-tip="Switch light / dark" aria-label="Toggle light or dark theme">◐</button>
+      <button class="icon-btn" id="menuBtn" data-tip="Save, export &amp; reset" aria-label="Save, export and reset">⋯</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs" role="tablist" aria-label="Workshop steps">
+    <button class="tab" role="tab" aria-selected="true" data-view="map"><span class="num">1</span> Build your map</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="brainstorm"><span class="num">2</span> Brainstorm with AI</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="prioritize"><span class="num">3</span> Rank &amp; prioritize</button>
+  </div>
+
+  <main>
+    <!-- VIEW: MAP -->
+    <section class="view active" id="view-map" role="tabpanel">
+      <div class="maptoolbar">
+        <div class="legend" id="legend">
+          <span class="lg-title">Build outward <button class="info-i" data-info="levels" aria-label="How to build your map">i</button></span>
+          <span class="lg"><span class="lvl-dot" style="background:var(--ink)"></span><b>Role</b></span>
+          <span class="lvl-arrow">→</span>
+          <span class="lg"><span class="lvl-dot" style="background:var(--sky)"></span>Categories</span>
+          <span class="lvl-arrow">→</span>
+          <span class="lg">Actions</span>
+          <span class="lvl-arrow">→</span>
+          <span class="lg">Details</span>
+        </div>
+        <div class="zoombar">
+          <button class="zbtn" id="zoomOut" data-tip="Zoom out" aria-label="Zoom out">−</button>
+          <span class="zpct" id="zoomPct">100%</span>
+          <button class="zbtn" id="zoomIn" data-tip="Zoom in" aria-label="Zoom in">+</button>
+          <button class="zbtn" id="zoomFit" data-tip="Fit map to screen" aria-label="Fit to screen">⤢</button>
+        </div>
+      </div>
+      <div class="canvas" id="canvas">
+        <div class="canvas-inner" id="canvasInner"></div>
+      </div>
+    </section>
+
+    <!-- VIEW: PRIORITIZE -->
+    <section class="view" id="view-prioritize" role="tabpanel">
+      <div class="scroller">
+        <div class="wrap">
+          <span class="eyebrow">Step 3 · Rank your tasks</span>
+          <h2 class="vh">Now decide where AI fits <button class="info-i" data-info="startai" aria-label="How to read this">i</button></h2>
+          <p class="vsub lead">Tag each task below with how you feel about it. The <b>manual, repetitive work</b> and the tasks you <b>have no strong feelings about</b> are your best first candidates for AI — the work that <b>fills your cup</b> and the <b>no-gos</b> stay firmly with you.</p>
+
+          <div class="rank-legend">
+            <span class="lg-title">Key</span>
+            <span class="rl-item"><span class="sym" data-sym="star"></span><b>Star</b> manual/repetitive <button class="info-i" data-info="star" aria-label="About the Star tag">i</button></span>
+            <span class="rl-item"><span class="sym" data-sym="question"></span><b>?</b> no strong opinion <button class="info-i" data-info="question" aria-label="About the Question mark tag">i</button></span>
+            <span class="rl-item"><span class="sym" data-sym="heart"></span><b>Heart</b> fills your cup <button class="info-i" data-info="heart" aria-label="About the Heart tag">i</button></span>
+            <span class="rl-item"><span class="sym" data-sym="xout"></span><b>X</b> keep off AI <button class="info-i" data-info="xout" aria-label="About the X-out tag">i</button></span>
+          </div>
+          <div class="rank-list" id="rankList"></div>
+
+          <h3 class="results-h">Your priorities</h3>
+          <div class="summary-strip" id="oppRow"></div>
+          <div class="buckets" id="buckets"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: BRAINSTORM -->
+    <section class="view" id="view-brainstorm" role="tabpanel">
+      <div class="scroller">
+        <div class="wrap">
+          <span class="eyebrow">Step 2 · Brainstorm with AI</span>
+          <h2 class="vh">Build out your list with AI <button class="info-i" data-info="brainstorm" aria-label="Why brainstorm with AI">i</button></h2>
+          <p class="vsub lead">You started your map from what you know — now let AI stretch it. The prompt below already includes everything you've listed and asks for about 20 more tasks you may have missed. Add the ones that fit back onto your map, then rank everything in step&nbsp;3.</p>
+
+          <div class="bs-grid">
+            <div class="panel">
+              <div class="panel-h"><span class="step">A</span><div><div class="ph-t">Copy this prompt</div><div class="ph-s">Already includes your role &amp; what you've listed</div></div></div>
+              <div class="panel-b">
+                <div class="prompt-box" id="promptBox"></div>
+                <div class="btn-row" style="margin-top:14px">
+                  <button class="btn gold" id="copyPrompt">Copy prompt</button>
+                  <span class="helper" style="margin:0; align-self:center">Paste into your approved AI assistant.</span>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-h"><span class="step">B</span><div><div class="ph-t">Add AI's list to your map</div><div class="ph-s">You'll rank these in the next step</div></div></div>
+              <div class="panel-b">
+                <p class="helper">Paste the list AI gave you (one idea per line, bullets are fine). We'll drop them into a new <b>“AI ideas”</b> category on your map so you can keep, edit, or delete each one.</p>
+                <textarea class="paste" id="pasteBox" placeholder="Draft first-pass meeting agendas&#10;Summarize weekly status updates&#10;Categorize incoming requests&#10;..."></textarea>
+                <div class="btn-row" style="margin-top:12px">
+                  <button class="btn primary" id="addIdeas">Add to my map</button>
+                  <button class="btn" id="clearPaste">Clear</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>AI in 20 Series · Week Five — Mapping Use Cases · Southern New Hampshire University</span>
+    <span class="save-state" id="saveState"><span class="dot"></span> Saved to this browser</span>
+  </footer>
+</div>
+
+<!-- Overlay: role setup -->
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-top">
+      <button class="modal-x" id="modalX" aria-label="Close" style="display:none">✕</button>
+      <span class="mt-eye">AI in 20 · Mapping use cases</span>
+      <h1 id="modalTitle">Let's map your work</h1>
+      <p>Start with your role at the center. You'll branch out into what you do, then find where AI can lighten the load.</p>
+    </div>
+    <div class="modal-body">
+      <label class="field-label" for="roleInput">What's your role or job title?</label>
+      <input class="txt" id="roleInput" type="text" placeholder="e.g. Academic Advisor, Marketing Coordinator, Faculty" autocomplete="off" />
+      <div class="field-hint">This becomes the center of your map and tailors your AI prompt. You can change it any time.</div>
+
+      <div id="seedSection">
+        <span class="field-label" style="margin-top:6px">Start with categories for…</span>
+        <div class="seed-grid" id="seedGrid"></div>
+        <div class="seed-note" id="seedNote"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn primary" id="startBtn">Start mapping →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay: menu -->
+<div class="overlay" id="menuOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="menuTitle" style="max-width:440px">
+    <div class="modal-top" style="background:var(--ink)">
+      <button class="modal-x" id="menuX" aria-label="Close">✕</button>
+      <span class="mt-eye">Your map</span>
+      <h1 id="menuTitle" style="font-size:20px">Save &amp; export</h1>
+      <p>Your work saves automatically in this browser. Use these to keep a copy or start over.</p>
+    </div>
+    <div class="modal-body">
+      <div class="btn-row" style="flex-direction:column">
+        <button class="btn primary" id="exportSummary" style="width:100%">Copy text summary</button>
+        <button class="btn" id="printBtn" style="width:100%">Print / Save as PDF</button>
+        <button class="btn" id="downloadJson" style="width:100%">Download map file (.json)</button>
+        <button class="btn" id="loadJsonBtn" style="width:100%">Load a saved map file</button>
+        <input type="file" id="jsonFile" accept="application/json,.json" hidden />
+        <button class="btn" id="resetBtn" style="width:100%; color:var(--xout); border-color:color-mix(in srgb,var(--xout) 40%, var(--border))">Start over (clear map)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay: guided intro tour -->
+<div class="overlay" id="introOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="introTitle" style="max-width:480px">
+    <div class="modal-top">
+      <button class="intro-skip" id="introSkip">Skip</button>
+      <span class="mt-eye" id="introEye">How this works</span>
+      <h1 id="introTitle" style="font-size:22px"></h1>
+      <p id="introBody"></p>
+    </div>
+    <div class="modal-body">
+      <div id="introExtra"></div>
+      <div class="intro-steps" id="introDots"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="introBack">Back</button>
+        <button class="btn primary" id="introNext" style="flex:1">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- SVG symbol glyphs ---------------- */
+  var GLYPH = {
+    star:'<svg class="sym" viewBox="0 0 24 24"><path d="M12 2.6l2.7 5.9 6.4.7-4.8 4.3 1.3 6.3L12 17l-5.6 2.8 1.3-6.3-4.8-4.3 6.4-.7z" fill="var(--star)" stroke="var(--deep-yellow)" stroke-width="1" stroke-linejoin="round"/></svg>',
+    question:'<svg class="sym" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="var(--question)"/><path d="M9 9a3 3 0 1 1 4.2 2.7c-.9.5-1.2 1-1.2 1.8v.4" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.25" fill="#fff"/></svg>',
+    heart:'<svg class="sym" viewBox="0 0 24 24"><path d="M12 20.5S3.5 14.9 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 5.7-8.5 11.3-8.5 11.3z" fill="var(--heart)"/></svg>',
+    xout:'<svg class="sym" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="var(--xout)"/><path d="M8.3 8.3l7.4 7.4M15.7 8.3l-7.4 7.4" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/></svg>'
+  };
+  var TAGS = ['star','question','heart','xout'];
+  var TAGMETA = {
+    star:{label:'Star',desc:'A manual or repetitive process',color:'var(--star)'},
+    question:{label:'Question mark',desc:"You don't have a strong opinion",color:'var(--question)'},
+    heart:{label:'Heart',desc:'Fills your cup — keep it',color:'var(--heart)'},
+    xout:{label:'X out',desc:'A no-go to offload',color:'var(--xout)'}
+  };
+  var BRANCH_COLORS = ['#009dea','#0a3370','#e28e03','#00559a','#a55b00','#00244e','#e0457b','#4a8c3f'];
+
+  var STARTER = ['Communication','Meetings & facilitation','Documentation','Project planning',
+                 'Scheduling','Data & reporting','Feedback & insights','Events'];
+
+  /* ============================================================================
+     ✎  EDITABLE EXPLAINER COPY  —  edit any wording below at will.
+        This drives the ⓘ info cards, the first-run intro tour, and the
+        symbol definitions injected into the AI prompt. Nothing else needs
+        to change if you only edit the text. Keep the <b>…</b> tags for bold.
+     ============================================================================ */
+
+  // Role starter templates. The chip whose keywords match the typed role auto-highlights;
+  // 'general' (the STARTER list above) is the fallback. Edit labels, hints, keywords, categories freely.
+  var TEMPLATES = [
+    { id:'general', label:'General / office', hint:'Common cross-role areas', keywords:[], categories:STARTER },
+    { id:'advising', label:'Advising & support', hint:'Appointments, planning, notes',
+      keywords:['advis','advisee','success coach','student success','retention','student support','counsel'],
+      categories:['Student appointments','Degree & schedule planning','Case notes & records','Outreach & follow-up','Referrals & resources','Caseload reporting'] },
+    { id:'faculty', label:'Faculty & teaching', hint:'Courses, grading, feedback',
+      keywords:['faculty','professor','instructor','lecturer','adjunct','teach','curriculum','educator','course'],
+      categories:['Course design','Lecture & content prep','Grading & feedback','Student communication','Assessment & rubrics','Office hours','Research & scholarship'] },
+    { id:'admissions', label:'Admissions & enrollment', hint:'Outreach, review, yield',
+      keywords:['admission','enroll','recruit','applicant','prospective','yield'],
+      categories:['Applicant outreach','Application review','Info sessions & interviews','Follow-up & nurturing','CRM & data entry','Yield reporting','Events & tours'] },
+    { id:'marketing', label:'Marketing & comms', hint:'Content, social, campaigns',
+      keywords:['marketing','communication','comms','content','social media','brand','copywrit','public relations',' pr ','campaign','creative','designer'],
+      categories:['Content creation','Social media','Email & campaigns','Web updates','Brand & design','Analytics & reporting','Event promotion'] },
+    { id:'operations', label:'Operations & admin', hint:'Scheduling, projects, budget',
+      keywords:['operation',' admin','coordinator','manager','project','office','business','executive assistant','program','logistics',' ops'],
+      categories:['Scheduling & calendars','Meetings & facilitation','Documentation & SOPs','Budget & expenses','Project planning','Reporting','Vendor & logistics'] }
+  ];
+  var TEMPLATE_BY_ID = {}; TEMPLATES.forEach(function(t){ TEMPLATE_BY_ID[t.id]=t; });
+
+  // ⓘ info cards. Each: { tag, title, body:[paragraphs], syms:true? }
+  var EXPLAINERS = {
+    role: {
+      tag:'Start here',
+      title:'Why start with your role?',
+      body:[
+        'AI can only help with work you can <b>see clearly</b>. Naming your role and laying out what you actually do is the whole game — most missed AI opportunities are simply tasks nobody wrote down.',
+        'Put your role in the center, then branch outward. You are the expert on your own job; map it first, before any tool weighs in.'
+      ]
+    },
+    levels: {
+      tag:'How to build it',
+      title:'Build your map in three layers',
+      body:[
+        '<b>Categories</b> — the big parts of your job (the "quick hits"). Think broad: communication, scheduling, reporting, events.',
+        '<b>Actions</b> — how you actually do each one. "Documentation" becomes "write meeting notes," "update the wiki."',
+        '<b>Details</b> — break an action down to its bare bones. The smaller the step, the easier it is to see whether AI can take it on.'
+      ]
+    },
+    matrix: {
+      tag:'The decision matrix',
+      title:'Rank each task with four symbols',
+      syms:true,
+      body:[
+        'Once your work is on the page, tag each task by how you feel about it — not by whether AI <i>could</i> do it, but whether it <b>should</b>.',
+        '<b>★ Star</b> — a manual, repetitive process. Prime candidate to hand to AI. <b>? Question mark</b> — you have no strong opinion; worth a low-stakes experiment.',
+        '<b>♥ Heart</b> — work that fills your cup. Keep it; it’s part of why you love the job. <b>✕ X-out</b> — a no-go to offload: needs human judgment or relationships, or involves sensitive / high-risk information.',
+        'The pattern: your <b>stars and question marks</b> are where to start with AI. Your <b>hearts and X’s</b> stay firmly human.'
+      ]
+    },
+    star: {
+      tag:'Star · Manual process',
+      title:'A manual or repetitive task',
+      sym1:'star',
+      body:[
+        'You do this the same way, over and over, by hand. It follows a pattern — which is exactly what AI is good at.',
+        'These are your <b>prime candidates</b>. Start with the ones you do most often, where even a rough first draft saves real time.'
+      ]
+    },
+    question: {
+      tag:'Question mark · No opinion',
+      title:'You’re neutral about it',
+      sym1:'question',
+      body:[
+        'You don’t feel strongly about this task either way — you’re not attached to it, and it’s not off-limits.',
+        'That makes it a <b>safe place to experiment</b>. Try handing it to AI on something low-stakes and see whether it actually helps.'
+      ]
+    },
+    heart: {
+      tag:'Heart · Fills your cup',
+      title:'Work you want to keep',
+      sym1:'heart',
+      body:[
+        'This is the work that energizes you — part of why the job feels meaningful.',
+        'Protect it. Just because AI <i>could</i> help doesn’t mean it should. Keep the work that’s yours to own.'
+      ]
+    },
+    xout: {
+      tag:'X-out · A no-go',
+      title:'Keep this off AI',
+      sym1:'xout',
+      body:[
+        'Some work shouldn’t be offloaded — it needs human judgment or relationships, involves sensitive or high-risk information, or simply doesn’t apply.',
+        'Naming these clearly matters as much as finding opportunities: it draws the line on where AI <b>doesn’t</b> belong.'
+      ]
+    },
+    startai: {
+      tag:'Reading your results',
+      title:'Start small, low-risk, high-volume',
+      body:[
+        'Your best first AI use cases sit in the <b>Stars</b> (manual & repetitive) and <b>Question marks</b> (no strong opinion) columns.',
+        'Within those, begin with tasks that are <b>high-volume and low-risk</b> — things you do often where a rough first draft saves real time and a mistake is easy to catch.',
+        'The <b>Hearts</b> and <b>X’d-out</b> tasks are just as important: naming what should <i>stay</i> human keeps you in the driver’s seat and protects sensitive work.'
+      ]
+    },
+    brainstorm: {
+      tag:'Innovating with AI',
+      title:'You first, then AI — then compare',
+      body:[
+        'You mapped your work from lived experience. Now hand the same role to an AI assistant and let it brainstorm independently.',
+        'Comparing the two lists is where the insight lives: AI often surfaces tasks you do on autopilot and never thought to name — and you’ll spot things AI can’t know about your context.',
+        'Fold the useful ideas into your map, ignore the rest. <b>You stay the editor.</b> That back-and-forth — human judgment plus AI breadth — is exactly how good AI use cases get found.'
+      ]
+    }
+  };
+
+  // First-run guided tour. Each step: { eye, title, body, syms:true? }
+  var INTRO = [
+    { eye:'How this works · The idea',
+      title:'Find where AI fits your work',
+      body:'You can’t hand work to AI until you can see it. In a few minutes you’ll map your role, expand it with AI, rank your tasks, and walk away with a short list of where AI can genuinely help — and where it shouldn’t.' },
+    { eye:'How this works · Build it in layers',
+      title:'Map your job, broad then deep',
+      body:'Start with your role in the center. Branch into Categories (the big parts of your job), then Actions (how you do them), then Details (the bare-bones steps). Hover any node and use + to add, ✕ to remove.' },
+    { eye:'How this works · Brainstorm with AI',
+      title:'Let AI stretch your list',
+      body:'Next, copy the tailored prompt (it already includes what you’ve listed) into your approved AI tool. It suggests about 20 tasks you might have missed — add the ones that fit back onto your map.' },
+    { eye:'How this works · Rank your tasks',
+      title:'Then decide where AI fits',
+      body:'Last, tag each task with how you feel about it. This separates the work to offload from the work to protect — and points you to your best first AI use cases.',
+      syms:true }
+  ];
+  /* ===========================  end editable copy  =========================== */
+
+  /* ---------------- State ---------------- */
+  var LSKEY = 'snhu-mapyourwork-v1';
+  var uid = 0;
+  function nid(){ uid++; return 'n'+Date.now().toString(36)+(uid); }
+  function newNode(text){ return { id:nid(), text:text||'', tag:null, children:[] }; }
+
+  var state = null;
+  var scale = 1;
+
+  function defaultState(role, seed){
+    var root = newNode(role||'');
+    if(seed && seed!=='blank'){
+      var t = TEMPLATE_BY_ID[seed] || TEMPLATE_BY_ID['general'];
+      t.categories.forEach(function(c){ root.children.push(newNode(c)); });
+    }
+    return { v:1, role:role||'', root:root };
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(LSKEY);
+      if(raw){ var s = JSON.parse(raw); if(s && s.root){ return s; } }
+    }catch(e){}
+    return null;
+  }
+  var saveTimer=null;
+  function save(){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){
+      try{ localStorage.setItem(LSKEY, JSON.stringify(state)); }catch(e){}
+      flashSave();
+    },250);
+  }
+  function flashSave(){
+    var el=document.getElementById('saveState');
+    el.style.opacity='0.5'; setTimeout(function(){el.style.opacity='1';},150);
+  }
+
+  /* ---------------- Tree helpers ---------------- */
+  function findParent(node, id, parent){
+    if(node.id===id) return parent;
+    for(var i=0;i<node.children.length;i++){
+      var r=findParent(node.children[i], id, node);
+      if(r!==undefined) return r;
+    }
+    return undefined;
+  }
+  function findNode(node,id){
+    if(node.id===id) return node;
+    for(var i=0;i<node.children.length;i++){
+      var r=findNode(node.children[i],id); if(r) return r;
+    }
+    return null;
+  }
+  function depthOf(id){
+    function dive(n,d){ if(n.id===id) return d; for(var i=0;i<n.children.length;i++){var r=dive(n.children[i],d+1); if(r>=0) return r;} return -1; }
+    return dive(state.root,0);
+  }
+
+  /* ---------------- Rendering the map ---------------- */
+  var canvasInner = document.getElementById('canvasInner');
+
+  function phFor(depth){
+    if(depth===1) return 'New category (a part of your job)';
+    if(depth===2) return 'How you do it (an action)';
+    return 'Break it down (a detail)';
+  }
+  function addLabelFor(depth){
+    if(depth===0) return 'Add category';
+    if(depth===1) return 'Add action';
+    return 'Add detail';
+  }
+
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function nodeInner(node, depth, branchColor){
+    var isRoot = depth===0;
+    var isCat  = depth===1;
+    var tag = node.tag;
+    var style = '';
+    if(isCat){ style = 'style="--bc:'+branchColor+'"'; }
+    else if(!isRoot){ style = 'style="--bc:'+branchColor+';'+(tag?'--tagc:'+TAGMETA[tag].color+';':'')+'"'; }
+
+    var cls = 'node' + (isRoot?' root':'') + (isCat?' cat':'') + (tag?' tagged':'');
+    var badge = tag ? '<span class="tagbadge" data-id="'+node.id+'">'+GLYPH[tag]+'</span>' : '<span class="tagbadge" data-id="'+node.id+'"></span>';
+
+    var html = '<div class="'+cls+'" id="node-'+node.id+'" '+style+' data-depth="'+depth+'">';
+    if(isRoot){
+      html += '<span class="rt-label">Your role</span>';
+      html += '<div class="node-text" contenteditable="plaintext-only" data-id="'+node.id+'" data-ph="Your role">'+esc(node.text)+'</div>';
+      html += '<button class="nt add" data-act="add" data-id="'+node.id+'" data-tip="Add a category — a part of your job" aria-label="Add category">+</button>';
+    } else {
+      html += badge;
+      html += '<div class="node-text" contenteditable="plaintext-only" data-id="'+node.id+'" data-ph="'+esc(phFor(depth))+'">'+esc(node.text)+'</div>';
+      html += '<div class="node-tools">';
+      html += '<button class="nt add" data-act="add" data-id="'+node.id+'" data-tip="'+addLabelFor(depth)+'" aria-label="'+addLabelFor(depth)+'">+</button>';
+      html += '<button class="nt del" data-act="del" data-id="'+node.id+'" data-tip="Delete" aria-label="Delete">✕</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function branchHTML(node, depth, branchColor){
+    var html = '<div class="branch" data-id="'+node.id+'">';
+    html += nodeInner(node, depth, branchColor);
+    if(node.children.length){
+      html += '<div class="children">';
+      for(var i=0;i<node.children.length;i++){
+        var childColor = depth===0 ? BRANCH_COLORS[i % BRANCH_COLORS.length] : branchColor;
+        html += branchHTML(node.children[i], depth+1, childColor);
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function render(){
+    var html = '<svg class="connectors" id="connectors" xmlns="http://www.w3.org/2000/svg"></svg>';
+    html += branchHTML(state.root, 0, BRANCH_COLORS[0]);
+    canvasInner.innerHTML = html;
+    drawConnectors();
+    renderLegendGlyphs();
+    updatePromptBox();
+    save();
+  }
+
+  function renderLegendGlyphs(){
+    document.querySelectorAll('.sym[data-sym]').forEach(function(el){
+      if(!el.innerHTML.trim()) el.innerHTML = GLYPH[el.getAttribute('data-sym')];
+    });
+  }
+
+  /* ---------- Connectors ---------- */
+  // Position of an element relative to canvasInner, summing the offsetParent chain
+  // (robust even though .branch / .node are positioned).
+  function relPos(el){
+    var x=0, y=0;
+    while(el && el!==canvasInner){ x+=el.offsetLeft; y+=el.offsetTop; el=el.offsetParent; }
+    return {x:x, y:y};
+  }
+  function drawConnectors(){
+    var svg = document.getElementById('connectors');
+    if(!svg || !state) return;
+    var w = canvasInner.scrollWidth, h = canvasInner.scrollHeight;
+    svg.setAttribute('width', w); svg.setAttribute('height', h);
+    var paths = '';
+    (function walk(node, depth, branchColor){
+      if(!node.children.length) return;
+      var pEl = document.getElementById('node-'+node.id);
+      if(!pEl) return;
+      var pp = relPos(pEl);
+      var px = pp.x + pEl.offsetWidth;
+      var py = pp.y + pEl.offsetHeight/2;
+      for(var i=0;i<node.children.length;i++){
+        var child = node.children[i];
+        var childColor = depth===0 ? BRANCH_COLORS[i % BRANCH_COLORS.length] : branchColor;
+        var cEl = document.getElementById('node-'+child.id);
+        if(cEl){
+          var cp = relPos(cEl);
+          var cx = cp.x;
+          var cy = cp.y + cEl.offsetHeight/2;
+          var mid = px + (cx-px)/2;
+          var d = 'M'+px+','+py+' C'+mid+','+py+' '+mid+','+cy+' '+cx+','+cy;
+          var sw = depth===0 ? 2.4 : 1.8;
+          paths += '<path d="'+d+'" fill="none" stroke="'+childColor+'" stroke-width="'+sw+'" stroke-linecap="round" opacity="0.85"/>';
+        }
+        walk(child, depth+1, childColor);
+      }
+    })(state.root, 0, BRANCH_COLORS[0]);
+    svg.innerHTML = paths;
+  }
+  var connTimer=null;
+  function scheduleConnectors(){ clearTimeout(connTimer); connTimer=setTimeout(drawConnectors, 40); }
+
+  /* ---------------- Canvas interactions ---------------- */
+  canvasInner.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act]');
+    if(!btn) return;
+    var id = btn.getAttribute('data-id');
+    var act = btn.getAttribute('data-act');
+    if(act==='add'){ addChild(id); }
+    else if(act==='del'){ delNode(id); }
+    else if(act==='tag'){ openTagPop(btn, id); }
+  });
+  // text editing
+  canvasInner.addEventListener('input', function(e){
+    var el = e.target.closest('.node-text');
+    if(!el) return;
+    var id = el.getAttribute('data-id');
+    var node = findNode(state.root, id);
+    if(node){
+      node.text = el.textContent;
+      if(depthOf(id)===0) state.role = node.text;
+      updateRolePill();
+      scheduleConnectors(); save();
+    }
+  });
+  canvasInner.addEventListener('keydown', function(e){
+    var el = e.target.closest('.node-text');
+    if(!el) return;
+    if(e.key==='Enter'){ e.preventDefault(); el.blur();
+      // convenience: Enter on a node adds a sibling if it has text
+    }
+  });
+
+  function addChild(id){
+    var node = findNode(state.root, id);
+    if(!node) return;
+    var child = newNode('');
+    node.children.push(child);
+    render();
+    // focus the new node text
+    setTimeout(function(){
+      var el = document.querySelector('#node-'+CSS.escape(child.id)+' .node-text');
+      if(el){ el.focus(); placeCaretEnd(el); scrollIntoViewSoft(el); }
+    },30);
+  }
+  function delNode(id){
+    var parent = findParent(state.root, id, null);
+    if(!parent) return;
+    var node = findNode(state.root, id);
+    var doDel = function(){
+      parent.children = parent.children.filter(function(c){ return c.id!==id; });
+      render();
+    };
+    if(node && node.children.length){
+      confirmModal('“'+(node.text||'This branch')+'” and everything under it will be removed.', 'Delete', doDel);
+    } else doDel();
+  }
+
+  /* ---------- Custom confirm (native confirm() is unreliable in sandboxed iframes) ---------- */
+  function confirmModal(msg, yesLabel, onYes){
+    var ov=document.createElement('div');
+    ov.className='overlay show'; ov.style.zIndex='300';
+    ov.innerHTML='<div class="modal" style="max-width:390px"><div class="modal-body" style="padding:24px 26px">'
+      +'<div style="font-weight:800; font-size:16px; margin-bottom:7px; color:var(--text)">Are you sure?</div>'
+      +'<div style="color:var(--text-soft); font-size:13.5px; margin-bottom:20px; line-height:1.5">'+esc(msg)+'</div>'
+      +'<div style="display:flex; gap:10px"><button class="btn" data-no style="flex:1">Cancel</button>'
+      +'<button class="btn primary" data-yes style="flex:1; background:var(--xout); border:none">'+esc(yesLabel||'Delete')+'</button></div>'
+      +'</div></div>';
+    document.body.appendChild(ov);
+    var close=function(){ ov.remove(); };
+    ov.addEventListener('click', function(e){
+      if(e.target===ov || (e.target.closest && e.target.closest('[data-no]'))) close();
+      else if(e.target.closest && e.target.closest('[data-yes]')){ close(); onYes(); }
+    });
+  }
+
+  /* ---------- Tag popover ---------- */
+  var openPop=null;
+  function closePop(){ if(openPop){ openPop.remove(); openPop=null; document.removeEventListener('click', outsidePop, true); } }
+  function outsidePop(e){ if(openPop && !openPop.contains(e.target) && !e.target.closest('[data-act="tag"]') && !e.target.closest('.tagbadge')) closePop(); }
+  function openTagPop(anchor, id){
+    closePop();
+    var node = findNode(state.root, id); if(!node) return;
+    var pop = document.createElement('div');
+    pop.className='tagpop';
+    var inner='';
+    TAGS.forEach(function(t){
+      inner += '<button data-tag="'+t+'">'+GLYPH[t]+'<span>'+TAGMETA[t].label+'<small>'+TAGMETA[t].desc+'</small></span></button>';
+    });
+    inner += '<button class="clear" data-tag="">Clear tag</button>';
+    pop.innerHTML = inner;
+    document.body.appendChild(pop);
+    var r = anchor.getBoundingClientRect();
+    var top = r.bottom+6, left = r.left-100;
+    if(left<8) left=8;
+    if(left+230>window.innerWidth-8) left=window.innerWidth-238;
+    if(top+180>window.innerHeight-8) top = r.top-186;
+    pop.style.top=top+'px'; pop.style.left=left+'px';
+    pop.addEventListener('click', function(e){
+      var b=e.target.closest('[data-tag]'); if(!b) return;
+      var t=b.getAttribute('data-tag');
+      node.tag = t||null;
+      closePop(); render();
+    });
+    openPop=pop;
+    setTimeout(function(){ document.addEventListener('click', outsidePop, true); },0);
+  }
+
+  /* ---------- caret / scroll helpers ---------- */
+  function placeCaretEnd(el){
+    var r=document.createRange(); r.selectNodeContents(el); r.collapse(false);
+    var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+  function scrollIntoViewSoft(el){
+    try{ el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'}); }catch(e){}
+  }
+
+  /* ---------------- Zoom ---------------- */
+  function applyZoom(){
+    canvasInner.style.transform='scale('+scale+')';
+    document.getElementById('zoomPct').textContent = Math.round(scale*100)+'%';
+  }
+  document.getElementById('zoomIn').onclick=function(){ scale=Math.min(1.5, scale+0.1); applyZoom(); };
+  document.getElementById('zoomOut').onclick=function(){ scale=Math.max(0.4, scale-0.1); applyZoom(); };
+  document.getElementById('zoomFit').onclick=function(){
+    var cv=document.getElementById('canvas');
+    var need = canvasInner.scrollWidth; // scrollWidth is layout size, unaffected by transform
+    var avail = cv.clientWidth-20;
+    if(need<10) return;
+    scale = Math.max(0.4, Math.min(1.2, avail/need));
+    applyZoom();
+  };
+
+  /* ---------------- Tabs ---------------- */
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+      t.setAttribute('aria-selected','true');
+      var v=t.getAttribute('data-view');
+      document.querySelectorAll('.view').forEach(function(x){ x.classList.remove('active'); });
+      document.getElementById('view-'+v).classList.add('active');
+      if(v==='prioritize') renderPrioritize();
+      if(v==='brainstorm') updatePromptBox();
+      if(v==='map'){ if(state) render(); else scheduleConnectors(); }
+    });
+  });
+
+  /* ---------------- Prioritize view ---------------- */
+  function collectTagged(){
+    var out={star:[],question:[],heart:[],xout:[]};
+    (function walk(node, catName, depth){
+      var thisCat = depth===1 ? node.text : catName;
+      if(node.tag && depth>0){
+        out[node.tag].push({ text:node.text||'(untitled task)', cat:thisCat||'—' });
+      }
+      node.children.forEach(function(c){ walk(c, thisCat, depth+1); });
+    })(state.root, '', 0);
+    return out;
+  }
+
+  function renderPrioritize(){
+    if(!state) return;
+    renderRankList();
+    renderResults();
+  }
+
+  /* ----- the ranking list: tag every task here ----- */
+  function rankRow(node, depth, isCat){
+    var indent = 14 + Math.max(0, depth-2)*18;
+    var btns='';
+    TAGS.forEach(function(t){
+      var col={star:'var(--star)',question:'var(--question)',heart:'var(--heart)',xout:'var(--xout)'}[t];
+      btns += '<button type="button" class="rt-btn'+(node.tag===t?' on':'')+'" data-rank="'+t+'" data-id="'+node.id
+        +'" style="--rtc:'+col+'" aria-label="'+TAGMETA[t].label+'" data-tip="'+TAGMETA[t].label+' — '+esc(TAGMETA[t].desc)+'">'+GLYPH[t]+'</button>';
+    });
+    return '<div class="rank-row'+(isCat?' is-cat':'')+'" style="padding-left:'+indent+'px">'
+      +'<span class="rank-text">'+esc(node.text||'(untitled)')+'</span>'
+      +'<div class="rank-tags">'+btns+'</div></div>';
+  }
+  function renderRankList(){
+    var el=document.getElementById('rankList'); if(!el) return;
+    var html='';
+    state.root.children.forEach(function(cat, ci){
+      var hasText=(cat.text||'').trim().length>0;
+      if(!hasText && !cat.children.length) return;
+      var color=BRANCH_COLORS[ci % BRANCH_COLORS.length];
+      var tasks=[];
+      (function dive(n, d){ n.children.forEach(function(c){ if((c.text||'').trim()) tasks.push({node:c, depth:d}); dive(c, d+1); }); })(cat, 2);
+      if(tasks.length){
+        html += '<div class="rank-cat" style="--rcc:'+color+'">'+esc(cat.text||'Untitled category')+'</div>';
+        tasks.forEach(function(t){ html += rankRow(t.node, t.depth, false); });
+      } else {
+        html += rankRow(cat, 1, true);   // a category with no tasks is itself rankable
+      }
+    });
+    el.innerHTML = html || '<div class="rank-empty">Add categories and tasks on your map (step 1) — or brainstorm some in step 2 — then rank them here.</div>';
+  }
+  document.getElementById('rankList').addEventListener('click', function(e){
+    var b=e.target.closest('[data-rank]'); if(!b) return;
+    var node=findNode(state.root, b.getAttribute('data-id')); if(!node) return;
+    var t=b.getAttribute('data-rank');
+    node.tag = (node.tag===t) ? null : t;   // click again to clear
+    save();
+    renderRankList();
+    renderResults();
+  });
+
+  /* ----- the priority summary + buckets ----- */
+  function renderResults(){
+    if(!state) return;
+    var data = collectTagged();
+    var nStar=data.star.length, nQ=data.question.length, nHeart=data.heart.length, nX=data.xout.length;
+    var total = nStar+nQ+nHeart+nX;
+
+    var opp = document.getElementById('oppRow');
+    function statChip(key,label,n){
+      var col={star:'var(--star)',question:'var(--question)',heart:'var(--heart)',xout:'var(--xout)'}[key];
+      return '<div class="ss-chip" style="--scc:'+col+'">'+GLYPH[key]+'<span class="c">'+n+'</span><span class="l">'+label+'</span></div>';
+    }
+    opp.innerHTML =
+      '<div class="ss-primary">'
+      +'<div class="ss-n">'+(nStar+nQ)+'</div>'
+      +'<div><div class="ss-h">'+GLYPH.star+' Start here with AI <span class="badge-gold">Best fit</span></div>'
+      +'<div class="ss-txt">'+nStar+' manual/repetitive and '+nQ+' you’re neutral on — begin with the highest-volume, lowest-risk ones.</div></div>'
+      +'</div>'
+      +'<div class="ss-stats">'
+      + statChip('star','Stars',nStar)
+      + statChip('question','Questions',nQ)
+      + statChip('heart','Hearts',nHeart)
+      + statChip('xout','No-gos',nX)
+      +'</div>';
+
+    var buckets = document.getElementById('buckets');
+    var defs = [
+      {key:'star', title:'Stars', sub:'Manual & repetitive', color:'var(--star)', verdict:'✓ Prime AI candidates', lic:'var(--deep-yellow)'},
+      {key:'question', title:'Question marks', sub:'No strong opinion', color:'var(--question)', verdict:'→ Worth exploring', lic:'var(--impact)'},
+      {key:'heart', title:'Hearts', sub:'Fills your cup', color:'var(--heart)', verdict:'♥ Keep doing yourself', lic:'var(--heart)'},
+      {key:'xout', title:"X'd out", sub:'No-gos to offload', color:'var(--xout)', verdict:'✕ Keep off AI', lic:'var(--xout)'}
+    ];
+    var bh='';
+    defs.forEach(function(d){
+      var items=data[d.key];
+      bh += '<div class="bucket" style="--bkc:'+d.color+'">';
+      bh += '<div class="bucket-h">'+GLYPH[d.key]+'<div><div class="bk-t">'+d.title+'</div><div class="bk-s">'+d.sub+'</div></div><span class="bk-c">'+items.length+'</span><button class="info-i" data-info="'+d.key+'" aria-label="About '+esc(d.title)+'">i</button></div>';
+      bh += '<div class="bucket-verdict">'+d.verdict+'</div>';
+      bh += '<ul>';
+      if(items.length===0){ bh += '<li class="empty">No tasks tagged yet</li>'; }
+      else items.forEach(function(it){
+        bh += '<li style="--lic:'+d.lic+'"><span class="li-cat">'+esc(it.cat)+'</span>'+esc(it.text)+'</li>';
+      });
+      bh += '</ul></div>';
+    });
+    buckets.innerHTML = bh;
+
+    if(total===0){
+      opp.innerHTML = '<div class="ss-primary" style="flex-basis:100%; background:var(--surface); color:var(--text); border:1px dashed var(--border-strong); box-shadow:none">'
+        +'<div style="display:flex; gap:6px">'+GLYPH.star+GLYPH.question+GLYPH.heart+GLYPH.xout+'</div>'
+        +'<div><div class="ss-h" style="color:var(--text)">Nothing tagged yet</div>'
+        +'<div class="ss-txt" style="color:var(--text-soft)">Tag your tasks in the list above and your priorities will appear here.</div></div>'
+        +'</div>';
+    }
+  }
+
+  /* ---------------- Brainstorm prompt ---------------- */
+  function mapToText(withTags){
+    var lines=[];
+    (function walk(node, depth){
+      if(depth>0 && node.text){
+        lines.push(new Array(depth).join('  ') + '- ' + node.text + (withTags && node.tag ? ' ['+TAGMETA[node.tag].label+']' : ''));
+      }
+      node.children.forEach(function(c){ walk(c, depth+1); });
+    })(state.root, 0);
+    return lines.join('\n');
+  }
+  function buildPrompt(){
+    var role = state.role || '[your role]';
+    var mapTxt = mapToText(false);
+    var have = mapTxt
+      ? ('Here is what I’ve already listed — please do NOT repeat any of these, only add new ones:\n\n'+mapTxt)
+      : 'I haven’t listed much yet, so start me off from scratch.';
+    return 'I work at a university as a '+role+'. I’m listing out everything I do in my job so I can later spot where AI could help.\n\n'
+      + have + '\n\n'
+      + 'Brainstorm about 20 ADDITIONAL tasks or sub-tasks that a '+role+' typically does but that I may have missed. Focus on concrete, recurring, real work.\n\n'
+      + 'Output ONLY the list — no introduction, no explanations, no commentary, and do not rate or rank anything. Group the items under a few short category headings, keep each item to just a few words, and give me about 20 items total (no more) so it stays focused.';
+  }
+  function updatePromptBox(){
+    if(!state) return;
+    var box=document.getElementById('promptBox');
+    if(box) box.textContent = buildPrompt();
+  }
+  document.getElementById('copyPrompt').onclick=function(){
+    copyText(buildPrompt(), 'Prompt copied — paste it into your AI tool');
+  };
+  document.getElementById('clearPaste').onclick=function(){ document.getElementById('pasteBox').value=''; };
+  // Detect a leading ranking symbol from an AI-pasted line and strip it off.
+  function stripAndTag(text){
+    var s=text;
+    var map=[['star',['★','⭐','☆']],['heart',['♥','❤','💗','♡']],
+             ['question',['?','❓','❔']],['xout',['✕','✗','✖','❌','×']]];
+    var tag=null, i, j;
+    for(i=0;i<map.length && !tag;i++){
+      for(j=0;j<map[i][1].length;j++){
+        if(s.indexOf(map[i][1][j])===0){ tag=map[i][0]; s=s.slice(map[i][1][j].length); break; }
+      }
+    }
+    if(!tag){
+      var mm=s.match(/^[\[(]\s*(star|heart|question|x|xout|no|no-go)\s*[\])]\s*/i);
+      if(mm){ var w=mm[1].toLowerCase();
+        tag = (w==='star')?'star':(w==='heart')?'heart':(w==='question')?'question':'xout';
+        s=s.slice(mm[0].length); }
+    }
+    s=s.replace(/^\s*[:\-–—]\s*/,'').trim();
+    return {tag:tag, text:s};
+  }
+  document.getElementById('addIdeas').onclick=function(){
+    var raw=document.getElementById('pasteBox').value;
+    var items = raw.split(/\r?\n/).map(function(l){
+      var base=l.replace(/^\s*[-*•·▪◦\d\.\)\]]+\s*/,'').trim();  // strip bullets / numbering
+      if(!base) return null;
+      var r=stripAndTag(base);
+      if(!r.text || r.text.length>140) return null;
+      return r;
+    }).filter(Boolean);
+    if(!items.length){ toast('Paste some ideas first (one per line)'); return; }
+    var cat = newNode('AI ideas 💡');
+    items.forEach(function(it){ var n=newNode(it.text); n.tag=it.tag; cat.children.push(n); });
+    state.root.children.push(cat);
+    document.getElementById('pasteBox').value='';
+    document.querySelector('.tab[data-view="map"]').click();
+    render();
+    var tagged=items.filter(function(i){return i.tag;}).length;
+    toast(items.length+' idea'+(items.length>1?'s':'')+' added'+(tagged?' ('+tagged+' pre-tagged)':'')+' — see the “AI ideas” branch');
+  };
+
+  /* ---------------- Role pill / overlay ---------------- */
+  var seedChoice='general';
+  var manualSeed=false;   // true once the user clicks a template chip
+  function updateRolePill(){
+    var t=document.getElementById('rolePillText');
+    t.textContent = state && state.role ? state.role : 'Set your role';
+  }
+  document.getElementById('rolePill').onclick=function(){ openRoleModal(true); };
+
+  // Match the typed role to a template by keyword; null if none (→ general fallback).
+  function matchTemplate(role){
+    var r=' '+(role||'').toLowerCase().replace(/[^a-z0-9]+/g,' ')+' ';
+    for(var i=0;i<TEMPLATES.length;i++){
+      var kw=TEMPLATES[i].keywords;
+      for(var j=0;j<kw.length;j++){ if(r.indexOf(kw[j].toLowerCase())>=0) return TEMPLATES[i].id; }
+    }
+    return null;
+  }
+  function renderSeedGrid(){
+    var g=document.getElementById('seedGrid'); if(!g) return;
+    var html='';
+    TEMPLATES.forEach(function(t){
+      html+='<button type="button" class="seed-opt'+(seedChoice===t.id?' sel':'')+'" data-seed="'+t.id+'">'
+        +'<span class="so-t">'+esc(t.label)+'</span><span class="so-d">'+esc(t.hint)+'</span></button>';
+    });
+    html+='<button type="button" class="seed-opt'+(seedChoice==='blank'?' sel':'')+'" data-seed="blank">'
+      +'<span class="so-t">Blank canvas</span><span class="so-d">Just your role</span></button>';
+    g.innerHTML=html;
+  }
+  function updateSeedNote(){
+    var n=document.getElementById('seedNote'); if(!n) return;
+    var role=document.getElementById('roleInput').value.trim();
+    if(manualSeed || seedChoice==='blank' || seedChoice==='general' || !role){ n.innerHTML=''; return; }
+    var t=TEMPLATE_BY_ID[seedChoice];
+    n.innerHTML='Highlighted <b>'+esc(t.label)+'</b> to match “'+esc(role)+'.” Pick any to change.';
+  }
+  function autoMatchSeed(){
+    if(manualSeed) return;
+    seedChoice = matchTemplate(document.getElementById('roleInput').value) || 'general';
+    renderSeedGrid(); updateSeedNote();
+  }
+  document.getElementById('seedGrid').addEventListener('click', function(e){
+    var b=e.target.closest('[data-seed]'); if(!b) return;
+    seedChoice=b.getAttribute('data-seed'); manualSeed=true;
+    renderSeedGrid(); updateSeedNote();
+  });
+
+  function openRoleModal(editing){
+    var ov=document.getElementById('overlay');
+    document.getElementById('roleInput').value = (state && state.role) || '';
+    document.getElementById('modalX').style.display = editing ? 'flex' : 'none';
+    document.getElementById('startBtn').textContent = editing ? 'Save' : 'Start mapping →';
+    document.getElementById('seedSection').style.display = editing ? 'none' : 'block';
+    if(!editing){ manualSeed=false; autoMatchSeed(); }
+    ov.classList.add('show');
+    setTimeout(function(){ document.getElementById('roleInput').focus(); },50);
+    ov._editing = editing;
+  }
+  function closeRoleModal(){ document.getElementById('overlay').classList.remove('show'); }
+  document.getElementById('modalX').onclick=closeRoleModal;
+
+  document.getElementById('roleInput').addEventListener('input', autoMatchSeed);
+
+  document.getElementById('startBtn').onclick=function(){
+    var role=document.getElementById('roleInput').value.trim();
+    var ov=document.getElementById('overlay');
+    if(ov._editing){
+      state.role=role; state.root.text=role; updateRolePill(); closeRoleModal(); render();
+    } else {
+      state = defaultState(role, seedChoice);
+      updateRolePill(); closeRoleModal(); render();
+      setTimeout(function(){ document.getElementById('zoomFit').click(); },60);
+      if(!introSeen()) setTimeout(openIntro, 450);
+    }
+  };
+  document.getElementById('roleInput').addEventListener('keydown',function(e){ if(e.key==='Enter') document.getElementById('startBtn').click(); });
+
+  /* ---------------- Menu / export ---------------- */
+  function openMenu(){ document.getElementById('menuOverlay').classList.add('show'); }
+  function closeMenu(){ document.getElementById('menuOverlay').classList.remove('show'); }
+  document.getElementById('menuBtn').onclick=openMenu;
+  document.getElementById('menuX').onclick=closeMenu;
+  [document.getElementById('overlay'),document.getElementById('menuOverlay')].forEach(function(ov){
+    ov.addEventListener('click',function(e){ if(e.target===ov){ ov.classList.remove('show'); } });
+  });
+
+  document.getElementById('exportSummary').onclick=function(){
+    var data=collectTagged();
+    var t='MAP YOUR WORK — '+(state.role||'My role')+'\n(SNHU · AI in 20, Week Five)\n\n';
+    t+='MY MAP\n'+mapToText(true)+'\n\n';
+    t+='PRIORITIES\n';
+    t+='★ Stars (manual/repetitive) — prime AI candidates:\n'+listOr(data.star)+'\n';
+    t+='? Question marks (no strong opinion) — worth exploring:\n'+listOr(data.question)+'\n';
+    t+='♥ Hearts (fills your cup) — keep human:\n'+listOr(data.heart)+'\n';
+    t+='✕ X’d out (no-gos) — keep off AI:\n'+listOr(data.xout)+'\n';
+    copyText(t,'Summary copied to clipboard'); closeMenu();
+  };
+  function listOr(arr){ return arr.length? arr.map(function(i){return '  • '+i.text+'  ('+i.cat+')';}).join('\n') : '  (none)'; }
+
+  document.getElementById('printBtn').onclick=function(){ closeMenu(); setTimeout(function(){ window.print(); },200); };
+
+  document.getElementById('downloadJson').onclick=function(){
+    var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='map-your-work-'+(state.role||'role').replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+    closeMenu();
+  };
+  document.getElementById('loadJsonBtn').onclick=function(){ document.getElementById('jsonFile').click(); };
+  document.getElementById('jsonFile').addEventListener('change',function(e){
+    var f=e.target.files[0]; if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{ var s=JSON.parse(rd.result);
+        if(s && s.root){ state=s; updateRolePill(); render(); closeMenu();
+          setTimeout(function(){ document.getElementById('zoomFit').click(); },60);
+          toast('Map loaded'); }
+        else toast('That file doesn’t look like a saved map');
+      }catch(err){ toast('Could not read that file'); }
+    };
+    rd.readAsText(f); e.target.value='';
+  });
+  function startOver(){
+    confirmModal('Your whole map will be cleared and you’ll start fresh. This can’t be undone.', 'Start over', function(){
+      try{ localStorage.removeItem(LSKEY); }catch(e){}
+      state=null; canvasInner.innerHTML=''; closeMenu();
+      document.querySelectorAll('.tab').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+      document.querySelector('.tab[data-view="map"]').setAttribute('aria-selected','true');
+      document.querySelectorAll('.view').forEach(function(x){ x.classList.remove('active'); });
+      document.getElementById('view-map').classList.add('active');
+      openRoleModal(false);
+    });
+  }
+  document.getElementById('resetBtn').onclick=startOver;
+  document.getElementById('startOverBtn').onclick=startOver;
+
+  /* ---------------- Theme toggle ---------------- */
+  document.getElementById('themeBtn').onclick=function(){
+    var root=document.documentElement;
+    var cur=root.getAttribute('data-theme');
+    var next;
+    if(cur==='dark') next='light';
+    else if(cur==='light') next='dark';
+    else { // no explicit -> flip from system
+      var sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches;
+      next = sysDark? 'light':'dark';
+    }
+    root.setAttribute('data-theme', next);
+    try{ localStorage.setItem('snhu-mapyourwork-theme', next); }catch(e){}
+    scheduleConnectors();
+  };
+  (function(){ try{ var th=localStorage.getItem('snhu-mapyourwork-theme'); if(th) document.documentElement.setAttribute('data-theme',th); }catch(e){} })();
+
+  /* ---------------- Utilities ---------------- */
+  function copyText(txt,msg){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ toast(msg||'Copied'); },function(){ fallbackCopy(txt,msg); });
+    } else fallbackCopy(txt,msg);
+  }
+  function fallbackCopy(txt,msg){
+    var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast(msg||'Copied'); }catch(e){ toast('Copy failed — select manually'); }
+    ta.remove();
+  }
+  var toastTimer=null;
+  function toast(msg){
+    var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove('show'); },2600);
+  }
+
+  /* ---------------- Info cards (ⓘ) ---------------- */
+  var openCard=null;
+  function closeInfo(){ if(openCard){ openCard.remove(); openCard=null; document.removeEventListener('click', outsideInfo, true); } }
+  function outsideInfo(e){ if(openCard && !openCard.contains(e.target) && !(e.target.closest && e.target.closest('[data-info]'))) closeInfo(); }
+  function openInfo(anchor, key){
+    closeInfo();
+    var c=EXPLAINERS[key]; if(!c) return;
+    var card=document.createElement('div'); card.className='infocard';
+    var html='<button class="ic-x" aria-label="Close">✕</button>';
+    html+='<span class="ic-tag">'+esc(c.tag||'Why this matters')+'</span>';
+    html+='<h4>'+esc(c.title)+'</h4>';
+    if(c.syms){ html+='<div class="ic-syms">'+GLYPH.star+GLYPH.question+GLYPH.heart+GLYPH.xout+'</div>'; }
+    if(c.sym1 && GLYPH[c.sym1]){ html+='<div class="ic-syms">'+GLYPH[c.sym1]+'</div>'; }
+    html+=c.body.map(function(p){return '<p>'+p+'</p>';}).join('');
+    card.innerHTML=html;
+    document.body.appendChild(card);
+    var r=anchor.getBoundingClientRect();
+    var w=card.offsetWidth, h=card.offsetHeight;
+    var left=r.left-16;
+    if(left+w>window.innerWidth-10) left=window.innerWidth-10-w;
+    if(left<10) left=10;
+    var top=r.bottom+10;
+    if(top+h>window.innerHeight-10){ var up=r.top-10-h; top = up>10 ? up : Math.max(10, window.innerHeight-10-h); }
+    card.style.left=left+'px'; card.style.top=top+'px';
+    card.querySelector('.ic-x').onclick=closeInfo;
+    openCard=card;
+    setTimeout(function(){ document.addEventListener('click', outsideInfo, true); },0);
+  }
+  document.addEventListener('click', function(e){
+    var t=e.target.closest && e.target.closest('[data-info]');
+    if(t){ e.preventDefault(); e.stopPropagation(); openInfo(t, t.getAttribute('data-info')); }
+  });
+
+  /* ---------------- Hover tooltips ---------------- */
+  var tipEl=null;
+  function ensureTip(){ if(!tipEl){ tipEl=document.createElement('div'); tipEl.className='tip'; document.body.appendChild(tipEl); } return tipEl; }
+  function showTip(target){
+    var txt=target.getAttribute('data-tip'); if(!txt) return;
+    var tip=ensureTip(); tip.innerHTML=txt; tip.classList.add('show');
+    var r=target.getBoundingClientRect();
+    var top=r.top - tip.offsetHeight - 8;
+    var left=r.left + r.width/2 - tip.offsetWidth/2;
+    left=Math.max(8, Math.min(window.innerWidth-8-tip.offsetWidth, left));
+    if(top<4) top=r.bottom+8;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+  }
+  function hideTip(){ if(tipEl) tipEl.classList.remove('show'); }
+  document.addEventListener('mouseover', function(e){ var t=e.target.closest && e.target.closest('[data-tip]'); if(t) showTip(t); });
+  document.addEventListener('mouseout', function(e){ var t=e.target.closest && e.target.closest('[data-tip]'); if(t) hideTip(); });
+  document.addEventListener('focusin', function(e){ var t=e.target.closest && e.target.closest('[data-tip]'); if(t) showTip(t); });
+  document.addEventListener('focusout', hideTip);
+  window.addEventListener('scroll', hideTip, true);
+
+  /* ---------------- Intro tour ---------------- */
+  var introIdx=0;
+  function introSeen(){ try{ return localStorage.getItem('snhu-mapyourwork-intro')==='1'; }catch(e){ return false; } }
+  function renderIntro(){
+    var s=INTRO[introIdx];
+    document.getElementById('introEye').textContent=s.eye||'How this works';
+    document.getElementById('introTitle').textContent=s.title;
+    document.getElementById('introBody').textContent=s.body;
+    var extra='';
+    if(s.syms){
+      extra='<div class="intro-syms">'
+        +'<div class="intro-sym">'+GLYPH.star+'<b>Star</b><small>manual / repetitive</small></div>'
+        +'<div class="intro-sym">'+GLYPH.question+'<b>?</b><small>no strong opinion</small></div>'
+        +'<div class="intro-sym">'+GLYPH.heart+'<b>Heart</b><small>fills your cup</small></div>'
+        +'<div class="intro-sym">'+GLYPH.xout+'<b>X</b><small>keep off AI</small></div>'
+        +'</div>';
+    }
+    document.getElementById('introExtra').innerHTML=extra;
+    var dots=''; for(var k=0;k<INTRO.length;k++){ dots+='<span class="intro-dot'+(k===introIdx?' on':'')+'"></span>'; }
+    document.getElementById('introDots').innerHTML=dots;
+    document.getElementById('introBack').style.display = introIdx===0 ? 'none' : 'inline-flex';
+    document.getElementById('introNext').textContent = introIdx===INTRO.length-1 ? 'Got it — start mapping' : 'Next';
+  }
+  function openIntro(){ introIdx=0; renderIntro(); document.getElementById('introOverlay').classList.add('show'); }
+  function closeIntro(){ document.getElementById('introOverlay').classList.remove('show'); try{ localStorage.setItem('snhu-mapyourwork-intro','1'); }catch(e){} }
+  document.getElementById('introNext').onclick=function(){ if(introIdx>=INTRO.length-1) closeIntro(); else { introIdx++; renderIntro(); } };
+  document.getElementById('introBack').onclick=function(){ if(introIdx>0){ introIdx--; renderIntro(); } };
+  document.getElementById('introSkip').onclick=closeIntro;
+  document.getElementById('introOverlay').addEventListener('click', function(e){ if(e.target===this) closeIntro(); });
+  document.getElementById('helpBtn').onclick=openIntro;
+
+  /* ---------------- Observers ---------------- */
+  window.addEventListener('resize', scheduleConnectors);
+  if(window.ResizeObserver){
+    var ro=new ResizeObserver(scheduleConnectors);
+    ro.observe(canvasInner);
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      closePop(); closeInfo(); hideTip(); closeMenu(); closeIntro();
+      if(document.getElementById('overlay')._editing) closeRoleModal();
+    }
+  });
+
+  /* ---------------- Boot ---------------- */
+  function boot(){
+    renderLegendGlyphs();
+    var saved=load();
+    if(saved){ state=saved; updateRolePill(); render();
+      setTimeout(function(){ document.getElementById('zoomFit').click(); },80);
+    } else {
+      state=defaultState('','general'); // placeholder until modal completes
+      openRoleModal(false);
+    }
+  }
+  boot();
+})();
+</script>
+
+</body>
+</html>
