@@ -305,6 +305,29 @@
   }
   .node.root .nt.add:hover { background:var(--soft-yellow); }
 
+  /* drag to move / reorder */
+  .nt.grip { cursor:grab; touch-action:none; }
+  .nt.grip:active { cursor:grabbing; }
+  .node.dragging { opacity:.4; }
+  .node.drop-into { box-shadow:0 0 0 3px var(--gold), var(--shadow-md); }
+  .drag-ghost {
+    position:fixed; z-index:500; pointer-events:none;
+    background:var(--surface); border:2px solid var(--gold); border-radius:10px;
+    padding:6px 11px; font-size:13px; font-weight:700; color:var(--text);
+    box-shadow:var(--shadow-lg); max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .drop-indicator { position:fixed; z-index:499; pointer-events:none; height:3px; background:var(--gold); border-radius:3px; }
+  .drop-indicator::before { content:""; position:absolute; left:-3px; top:-3px; width:9px; height:9px; border-radius:50%; background:var(--gold); }
+
+  .movemenu {
+    position:fixed; z-index:130; background:var(--surface); border:1px solid var(--border-strong);
+    border-radius:12px; box-shadow:var(--shadow-lg); padding:6px; width:236px; max-height:320px; overflow:auto;
+  }
+  .movemenu .mm-title { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint); font-weight:800; padding:6px 8px 6px; }
+  .movemenu button { display:flex; align-items:center; gap:9px; width:100%; text-align:left; border:none; background:transparent; border-radius:8px; padding:8px 9px; color:var(--text); font-size:12.5px; font-weight:600; }
+  .movemenu button:hover { background:var(--surface-2); }
+  .movemenu .mm-dot { width:10px; height:10px; border-radius:50%; flex:none; }
+
   /* tag popover */
   .tagpop {
     position:absolute; z-index:50;
@@ -819,6 +842,7 @@
     xout:'<svg class="sym" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="var(--xout)"/><path d="M8.3 8.3l7.4 7.4M15.7 8.3l-7.4 7.4" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/></svg>'
   };
   var TAGS = ['star','question','heart','xout'];
+  var GRIP = '<svg viewBox="0 0 12 16" width="11" height="15" aria-hidden="true"><g fill="currentColor"><circle cx="4" cy="4" r="1.35"/><circle cx="8" cy="4" r="1.35"/><circle cx="4" cy="8" r="1.35"/><circle cx="8" cy="8" r="1.35"/><circle cx="4" cy="12" r="1.35"/><circle cx="8" cy="12" r="1.35"/></g></svg>';
   var TAGMETA = {
     star:{label:'Star',desc:'A manual or repetitive process',color:'var(--star)'},
     question:{label:'Question mark',desc:"You don't have a strong opinion",color:'var(--question)'},
@@ -1058,6 +1082,7 @@
       html += badge;
       html += '<div class="node-text" contenteditable="plaintext-only" data-id="'+node.id+'" data-ph="'+esc(phFor(depth))+'">'+esc(node.text)+'</div>';
       html += '<div class="node-tools">';
+      html += '<button class="nt grip" data-drag="1" data-id="'+node.id+'" data-tip="Drag to move · click to pick a category" aria-label="Move this item">'+GRIP+'</button>';
       html += '<button class="nt add" data-act="add" data-id="'+node.id+'" data-tip="'+addLabelFor(depth)+'" aria-label="'+addLabelFor(depth)+'">+</button>';
       html += '<button class="nt del" data-act="del" data-id="'+node.id+'" data-tip="Delete" aria-label="Delete">✕</button>';
       html += '</div>';
@@ -1252,6 +1277,177 @@
   }
   function scrollIntoViewSoft(el){
     try{ el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'}); }catch(e){}
+  }
+
+  /* ---------------- Drag to move / reorder ---------------- */
+  function isSelfOrDesc(node, id){
+    if(node.id===id) return true;
+    for(var i=0;i<node.children.length;i++){ if(isSelfOrDesc(node.children[i], id)) return true; }
+    return false;
+  }
+  function trunc(s, n){ s=s||''; return s.length>n ? s.slice(0,n-1)+'…' : s; }
+
+  // Re-parent / reorder a node. pos: 'before' | 'after' | 'child' (relative to targetId)
+  function moveNode(dragId, targetId, pos){
+    if(dragId===targetId) return;
+    var dragNode = findNode(state.root, dragId); if(!dragNode) return;
+    if(isSelfOrDesc(dragNode, targetId)) return;            // never drop into own subtree
+    var oldParent = findParent(state.root, dragId, null); if(!oldParent) return;
+    oldParent.children = oldParent.children.filter(function(c){ return c.id!==dragId; });
+    if(pos==='child'){
+      var t = findNode(state.root, targetId);
+      (t || state.root).children.push(dragNode);
+    } else {
+      var tp = findParent(state.root, targetId, null) || state.root;
+      var idx = tp.children.findIndex(function(c){ return c.id===targetId; });
+      if(idx<0) idx = tp.children.length;
+      if(pos==='after') idx = idx+1;
+      tp.children.splice(idx, 0, dragNode);
+    }
+    render(); save();
+    toast('Moved “'+trunc(dragNode.text||'item',28)+'”');
+  }
+
+  var drag = { id:null, active:false, startX:0, startY:0, ghost:null, indicator:null, target:null, invalidSet:null, handleEl:null };
+
+  canvasInner.addEventListener('pointerdown', function(e){
+    var h = e.target.closest('[data-drag]'); if(!h) return;
+    e.preventDefault(); e.stopPropagation();
+    drag.id = h.getAttribute('data-id');
+    drag.handleEl = h;
+    drag.startX = e.clientX; drag.startY = e.clientY;
+    drag.active = false;
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragUp);
+    document.addEventListener('pointercancel', onDragCancel);
+  });
+
+  function beginDrag(){
+    drag.active = true;
+    closePop(); closeInfo(); closeMove();
+    var node = findNode(state.root, drag.id); if(!node){ onDragCancel(); return; }
+    var srcEl = document.getElementById('node-'+drag.id);
+    if(srcEl) srcEl.classList.add('dragging');
+    drag.invalidSet = {};
+    (function collect(n){ drag.invalidSet[n.id]=true; n.children.forEach(collect); })(node);
+    var g = document.createElement('div'); g.className='drag-ghost';
+    g.textContent = node.text ? trunc(node.text,30) : '(untitled)';
+    document.body.appendChild(g); drag.ghost = g;
+    var ind = document.createElement('div'); ind.className='drop-indicator'; ind.style.display='none';
+    document.body.appendChild(ind); drag.indicator = ind;
+    document.body.style.userSelect='none';
+  }
+
+  function onDragMove(e){
+    if(!drag.id) return;
+    if(!drag.active){
+      if(Math.abs(e.clientX-drag.startX) < 5 && Math.abs(e.clientY-drag.startY) < 5) return;
+      beginDrag();
+    }
+    if(!drag.active || !drag.ghost) return;
+    drag.ghost.style.left = (e.clientX + 12) + 'px';
+    drag.ghost.style.top  = (e.clientY + 14) + 'px';
+    clearDropVisual();
+    drag.target = null;
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var nodeEl = el && el.closest ? el.closest('.node') : null;
+    if(!nodeEl) return;
+    var tid = nodeEl.id.indexOf('node-')===0 ? nodeEl.id.slice(5) : null;
+    if(!tid || drag.invalidSet[tid]) return;
+    var rect = nodeEl.getBoundingClientRect();
+    var rel = (e.clientY - rect.top) / rect.height;
+    var pos;
+    if(nodeEl.classList.contains('root')) pos='child';
+    else if(rel < 0.30) pos='before';
+    else if(rel > 0.70) pos='after';
+    else pos='child';
+    drag.target = { id:tid, pos:pos };
+    if(pos==='child'){ nodeEl.classList.add('drop-into'); }
+    else {
+      drag.indicator.style.display='block';
+      drag.indicator.style.left  = rect.left + 'px';
+      drag.indicator.style.width = rect.width + 'px';
+      drag.indicator.style.top   = ((pos==='before' ? rect.top - 2 : rect.bottom - 1)) + 'px';
+    }
+  }
+
+  function clearDropVisual(){
+    if(drag.indicator) drag.indicator.style.display='none';
+    document.querySelectorAll('.node.drop-into').forEach(function(n){ n.classList.remove('drop-into'); });
+  }
+  function endDrag(){
+    if(drag.ghost){ drag.ghost.remove(); drag.ghost=null; }
+    if(drag.indicator){ drag.indicator.remove(); drag.indicator=null; }
+    document.querySelectorAll('.node.dragging').forEach(function(n){ n.classList.remove('dragging'); });
+    clearDropVisual();
+    document.body.style.userSelect='';
+    drag.invalidSet=null;
+  }
+  function detachDragListeners(){
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragUp);
+    document.removeEventListener('pointercancel', onDragCancel);
+  }
+  function onDragUp(){
+    detachDragListeners();
+    if(drag.active){
+      var t = drag.target, id = drag.id;
+      endDrag();
+      drag.id=null; drag.active=false; drag.target=null;
+      if(t) moveNode(id, t.id, t.pos);
+    } else {
+      // no drag movement → treat as a request to pick a destination
+      var h = drag.handleEl, id2 = drag.id;
+      drag.id=null;
+      openMoveMenu(h, id2);
+    }
+  }
+  function onDragCancel(){
+    detachDragListeners();
+    if(drag.active) endDrag();
+    drag.id=null; drag.active=false; drag.target=null;
+  }
+  // keyboard: focus the grip and press Enter/Space to open the move menu
+  canvasInner.addEventListener('keydown', function(e){
+    var h = e.target.closest('[data-drag]'); if(!h) return;
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openMoveMenu(h, h.getAttribute('data-id')); }
+  });
+
+  /* ----- "Move under…" menu (accessible fallback) ----- */
+  var openMove=null;
+  function closeMove(){ if(openMove){ openMove.remove(); openMove=null; document.removeEventListener('click', outsideMove, true); } }
+  function outsideMove(e){ if(openMove && !openMove.contains(e.target) && !(e.target.closest && e.target.closest('[data-drag]'))) closeMove(); }
+  function openMoveMenu(anchor, id){
+    closeMove();
+    var dragNode = findNode(state.root, id); if(!dragNode || !anchor) return;
+    var m = document.createElement('div'); m.className='movemenu';
+    var html = '<div class="mm-title">Move “'+esc(trunc(dragNode.text||'item',22))+'” under…</div>';
+    state.root.children.forEach(function(cat, ci){
+      if(isSelfOrDesc(dragNode, cat.id)) return;
+      var color = BRANCH_COLORS[ci % BRANCH_COLORS.length];
+      html += '<button type="button" data-move-cat="'+cat.id+'"><span class="mm-dot" style="background:'+color+'"></span>'+esc(cat.text||'Untitled category')+'</button>';
+    });
+    html += '<button type="button" data-move-top="1"><span class="mm-dot" style="background:var(--ink)"></span>Make it a top-level category</button>';
+    m.innerHTML = html;
+    document.body.appendChild(m);
+    var r = anchor.getBoundingClientRect();
+    var left = r.right - 236; if(left < 8) left = 8;
+    if(left + 236 > window.innerWidth - 8) left = window.innerWidth - 244;
+    var top = r.bottom + 6;
+    if(top + m.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - m.offsetHeight - 6);
+    m.style.left = left+'px'; m.style.top = top+'px';
+    m.addEventListener('click', function(e){
+      var b = e.target.closest('[data-move-cat],[data-move-top]'); if(!b) return;
+      if(b.hasAttribute('data-move-top')){
+        var dn=findNode(state.root,id), op=findParent(state.root,id,null);
+        if(dn && op){ op.children=op.children.filter(function(c){return c.id!==id;}); state.root.children.push(dn); render(); save(); toast('Moved to a top-level category'); }
+      } else {
+        moveNode(id, b.getAttribute('data-move-cat'), 'child');
+      }
+      closeMove();
+    });
+    openMove = m;
+    setTimeout(function(){ document.addEventListener('click', outsideMove, true); },0);
   }
 
   /* ---------------- Zoom ---------------- */
@@ -1736,7 +1932,7 @@
   }
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
-      closePop(); closeInfo(); hideTip(); closeMenu(); closeIntro();
+      closePop(); closeInfo(); hideTip(); closeMenu(); closeIntro(); closeMove();
       if(document.getElementById('overlay')._editing) closeRoleModal();
     }
   });
