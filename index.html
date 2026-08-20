@@ -419,6 +419,16 @@
   }
   .helper { font-size:12.5px; color:var(--text-soft); margin:2px 0 14px; }
 
+  /* data / privacy reminder */
+  .data-note { display:flex; gap:10px; align-items:flex-start; background:var(--soft-blue); border:1px solid color-mix(in srgb, var(--impact) 28%, transparent); border-radius:12px; padding:11px 14px; font-size:12.5px; line-height:1.5; color:var(--text); }
+  .data-note .dn-ico { flex:none; width:19px; height:19px; color:var(--impact); margin-top:1px; }
+  .data-note b { font-weight:800; }
+  :root[data-theme="dark"] .data-note .dn-ico { color:var(--sky); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .data-note .dn-ico { color:var(--sky); } }
+  .foot-note { color:var(--impact); font-weight:700; }
+  :root[data-theme="dark"] .foot-note { color:var(--sky); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .foot-note { color:var(--sky); } }
+
   /* buttons */
   .btn {
     display:inline-flex; align-items:center; gap:8px; justify-content:center;
@@ -725,6 +735,11 @@
           <h2 class="vh">Build out your list with AI <button class="info-i" data-info="brainstorm" aria-label="Why brainstorm with AI">i</button></h2>
           <p class="vsub lead">You started your map from what you know — now let AI stretch it. The prompt below already includes everything you've listed and asks for about 20 more tasks you may have missed. Add the ones that fit back onto your map, then rank everything in step&nbsp;3.</p>
 
+          <div class="data-note" style="margin-bottom:22px">
+            <svg class="dn-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" fill="currentColor" opacity="0.15"/><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="15" r="1.7" fill="currentColor"/></svg>
+            <div><b>Keep it public.</b> Follow all SNHU AI &amp; data guidance and put only public, non-sensitive information into your AI tool — never student records, personal data (PII), or confidential SNHU information.</div>
+          </div>
+
           <div class="bs-grid">
             <div class="panel">
               <div class="panel-h"><span class="step">A</span><div><div class="ph-t">Copy this prompt</div><div class="ph-s">Already includes your role &amp; what you've listed</div></div></div>
@@ -754,7 +769,10 @@
   </main>
 
   <footer class="foot">
-    <span>AI in 20 Series · Week Five — Mapping Use Cases · Southern New Hampshire University</span>
+    <span style="display:flex; flex-direction:column; gap:2px">
+      <span>AI in 20 Series · Week Five — Mapping Use Cases · Southern New Hampshire University</span>
+      <span class="foot-note">Follow all SNHU AI &amp; data guidance — enter only public, non-sensitive information.</span>
+    </span>
     <span class="save-state" id="saveState"><span class="dot"></span> Saved to this browser</span>
   </footer>
 </div>
@@ -777,6 +795,11 @@
         <span class="field-label" style="margin-top:6px">Start with categories for…</span>
         <div class="seed-grid" id="seedGrid"></div>
         <div class="seed-note" id="seedNote"></div>
+      </div>
+
+      <div class="data-note" style="margin-top:16px; font-size:11.5px">
+        <svg class="dn-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:17px;height:17px"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" fill="currentColor" opacity="0.15"/><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="15" r="1.7" fill="currentColor"/></svg>
+        <div>Follow all SNHU AI &amp; data guidance — enter only <b>public, non-sensitive</b> information (no student records, PII, or confidential data).</div>
       </div>
 
       <div class="modal-actions">
