@@ -429,6 +429,30 @@
   :root[data-theme="dark"] .foot-note { color:var(--sky); }
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .foot-note { color:var(--sky); } }
 
+  /* feedback (artifact only) */
+  .feedback{ display:none; margin-top:30px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px 22px; box-shadow:var(--shadow-sm); border-top:3px solid var(--gold); }
+  .feedback.on{ display:block; }
+  .feedback h3{ font-size:16px; font-weight:800; margin:0 0 3px; letter-spacing:-.01em; }
+  .fb-sub{ font-size:12.5px; color:var(--text-soft); margin:0 0 14px; }
+  .stars{ display:flex; gap:5px; margin-bottom:14px; }
+  .star{ width:36px; height:36px; padding:4px; border:none; background:none; cursor:pointer; color:var(--border-strong); line-height:0; border-radius:8px; }
+  .star:hover{ background:var(--surface-2); }
+  .star svg{ width:100%; height:100%; display:block; }
+  .star.on{ color:var(--gold); }
+  .fb-comment{ width:100%; min-height:62px; resize:vertical; border:1px solid var(--border-strong); border-radius:10px; background:var(--surface-2); color:var(--text); padding:10px 12px; font-family:var(--font); font-size:13px; line-height:1.5; }
+  .fb-note{ display:flex; gap:7px; align-items:flex-start; font-size:11px; color:var(--text-faint); margin:9px 0 13px; }
+  .fb-note svg{ flex:none; width:14px; height:14px; margin-top:1px; }
+  .fb-actions{ display:flex; gap:12px; align-items:center; }
+  .fb-thanks{ display:none; align-items:center; gap:10px; font-size:15px; font-weight:800; color:var(--impact); }
+  :root[data-theme="dark"] .fb-thanks{ color:var(--sky); }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .fb-thanks{ color:var(--sky); } }
+  .fb-thanks svg{ width:22px; height:22px; }
+  .feedback.done .fb-form{ display:none; }
+  .feedback.done .fb-thanks{ display:flex; }
+  .foot-rate{ display:none; border:1px solid var(--border-strong); background:var(--surface); color:var(--text); border-radius:var(--r-pill); padding:5px 12px; font-size:12px; font-weight:700; align-items:center; gap:6px; }
+  .foot-rate.on{ display:inline-flex; }
+  .foot-rate:hover{ border-color:var(--gold); }
+
   /* buttons */
   .btn {
     display:inline-flex; align-items:center; gap:8px; justify-content:center;
@@ -723,6 +747,23 @@
           <h3 class="results-h">Your priorities</h3>
           <div class="summary-strip" id="oppRow"></div>
           <div class="buckets" id="buckets"></div>
+
+          <div class="feedback" id="feedback">
+            <div class="fb-form">
+              <h3>Was this helpful?</h3>
+              <p class="fb-sub">Your rating helps us improve this tool — it takes five seconds.</p>
+              <div class="stars" id="stars" role="radiogroup" aria-label="Rate this tool from 1 to 5 stars"></div>
+              <textarea class="fb-comment" id="fbComment" maxlength="300" placeholder="Optional: what worked, what didn't? (a sentence is plenty)"></textarea>
+              <div class="fb-note">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="1.8"/></svg>
+                <span>Anonymous. Please don't include names, student information, or anything sensitive.</span>
+              </div>
+              <div class="fb-actions">
+                <button class="btn primary" id="fbSubmit" disabled>Send feedback</button>
+              </div>
+            </div>
+            <div class="fb-thanks"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><path d="M7.5 12.5l3 3 6-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Thanks for your feedback!</div>
+          </div>
         </div>
       </div>
     </section>
@@ -773,7 +814,10 @@
       <span>AI in 20 Series · Week Five — Mapping Use Cases · Southern New Hampshire University</span>
       <span class="foot-note">Follow all SNHU AI &amp; data guidance — enter only public, non-sensitive information.</span>
     </span>
-    <span class="save-state" id="saveState"><span class="dot"></span> Saved to this browser</span>
+    <span style="display:flex; align-items:center; gap:12px">
+      <button class="foot-rate" id="fbLink" type="button">★ Rate this tool</button>
+      <span class="save-state" id="saveState"><span class="dot"></span> Saved to this browser</span>
+    </span>
   </footer>
 </div>
 
@@ -1959,6 +2003,73 @@
       if(document.getElementById('overlay')._editing) closeRoleModal();
     }
   });
+
+  /* ---------------- Feedback (Claude artifact database only) ----------------
+     Collects ONLY an anonymous star rating + optional comment + timestamp.
+     Never the map, role, or any identity. Hidden entirely unless the artifact
+     database is available (so it never shows on the plain Vercel/HTML build). */
+  var fbDb = null, fbRating = 0;
+  var fbStars = document.getElementById('stars');
+  var fbSubmit = document.getElementById('fbSubmit');
+  var fbCommentEl = document.getElementById('fbComment');
+  var fbCard = document.getElementById('feedback');
+  var FB_STAR = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6l2.7 5.9 6.4.7-4.8 4.3 1.3 6.3L12 17l-5.6 2.8 1.3-6.3-4.8-4.3 6.4-.7z"/></svg>';
+
+  function fbPaint(v){ var k=fbStars.children; for(var i=0;i<k.length;i++){ k[i].classList.toggle('on', i<v); } }
+  (function buildStars(){
+    for(var i=1;i<=5;i++){ (function(n){
+      var b=document.createElement('button');
+      b.type='button'; b.className='star'; b.setAttribute('role','radio');
+      b.setAttribute('aria-label', n+(n>1?' stars':' star')); b.innerHTML=FB_STAR;
+      b.addEventListener('mouseenter', function(){ fbPaint(n); });
+      b.addEventListener('mouseleave', function(){ fbPaint(fbRating); });
+      b.addEventListener('click', function(){
+        fbRating=n; fbPaint(n); fbSubmit.disabled=false;
+        var kids=fbStars.children; for(var j=0;j<kids.length;j++) kids[j].setAttribute('aria-checked', j===(n-1)?'true':'false');
+      });
+      fbStars.appendChild(b);
+    })(i); }
+  })();
+
+  function fbId(){
+    var id=null; try{ id=localStorage.getItem('myw-fb-id'); }catch(e){}
+    if(!id){ id='fb_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); try{ localStorage.setItem('myw-fb-id', id); }catch(e){} }
+    return id;
+  }
+  fbSubmit.addEventListener('click', function(){
+    if(!fbRating || !fbDb) return;
+    fbSubmit.disabled=true; fbSubmit.textContent='Sending…';
+    var rec = {
+      rating: fbRating,
+      comment: (fbCommentEl.value||'').trim().slice(0,300),
+      ts: new Date().toISOString(),
+      context: 'artifact',
+      app: 'map-your-work'
+    };
+    Promise.resolve(fbDb.doc('feedback/'+fbId()).set(rec)).then(function(){
+      fbCard.classList.add('done');
+      try{ localStorage.setItem('myw-fb-done','1'); }catch(e){}
+    }).catch(function(){
+      fbSubmit.disabled=false; fbSubmit.textContent='Send feedback';
+      toast('Could not send just now — please try again');
+    });
+  });
+
+  function fbEnable(ns){
+    fbDb = ns;
+    fbCard.classList.add('on');
+    var link=document.getElementById('fbLink'); if(link) link.classList.add('on');
+    try{ if(localStorage.getItem('myw-fb-done')==='1') fbCard.classList.add('done'); }catch(e){}
+  }
+  var fbLink=document.getElementById('fbLink');
+  if(fbLink) fbLink.addEventListener('click', function(){
+    document.querySelector('.tab[data-view="prioritize"]').click();
+    setTimeout(function(){ try{ fbCard.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }, 60);
+  });
+  // Resolve the artifact database if we're running inside a Claude artifact.
+  if(window.claude && typeof window.claude.use==='function'){
+    try{ window.claude.use('db').then(function(ns){ if(ns) fbEnable(ns); }, function(){}); }catch(e){}
+  }
 
   /* ---------------- Boot ---------------- */
   function boot(){
