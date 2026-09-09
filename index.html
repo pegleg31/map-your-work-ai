@@ -6,6 +6,7 @@
 <meta name="description" content="Map your work and find where AI fits your role - an SNHU AI in 20 tool." />
 <meta name="color-scheme" content="light dark" />
 <title>Map Your Work With AI Tools - SNHU</title>
+<script>window.__MYW_BACKEND__ = "/api/feedback";</script>
 </head>
 <body><style>
   /* ============================================================
@@ -841,7 +842,7 @@
 
   <footer class="foot">
     <span style="display:flex; flex-direction:column; gap:2px">
-      <span>AI in 20 Series · Week Five — Mapping Use Cases · Southern New Hampshire University</span>
+      <span id="footBrand">AI in 20 Series · Week Five — Mapping Use Cases · Southern New Hampshire University</span>
       <span class="foot-note">Follow all SNHU AI &amp; data guidance — enter only public, non-sensitive information.</span>
     </span>
     <span style="display:flex; align-items:center; gap:12px">
@@ -2064,11 +2065,13 @@
     }
   });
 
-  /* ---------------- Feedback (Claude artifact database only) ----------------
-     Collects ONLY an anonymous star rating + optional comment + timestamp.
-     Never the map, role, or any identity. Hidden entirely unless the artifact
-     database is available (so it never shows on the plain Vercel/HTML build). */
-  var fbDb = null, fbRating = 0;
+  /* ---------------- Feedback (Vercel backend only) ----------------
+     Collects ONLY an anonymous star rating + optional comment + timestamp,
+     POSTed to a serverless endpoint. Never the map, role, or any identity.
+     Enabled only when the page was built with a backend (window.__MYW_BACKEND__),
+     i.e. the Vercel build — so it stays hidden on the Claude artifact. */
+  var FB_ENDPOINT = (typeof window!=='undefined' && window.__MYW_BACKEND__) ? String(window.__MYW_BACKEND__) : null;
+  var fbRating = 0;
   var fbStars = document.getElementById('stars');
   var fbSubmit = document.getElementById('fbSubmit');
   var fbCommentEl = document.getElementById('fbComment');
@@ -2091,32 +2094,17 @@
     })(i); }
   })();
 
-  function fbId(){
-    var id=null; try{ id=localStorage.getItem('myw-fb-id'); }catch(e){}
-    if(!id){ id='fb_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); try{ localStorage.setItem('myw-fb-id', id); }catch(e){} }
-    return id;
-  }
   fbSubmit.addEventListener('click', function(){
-    if(!fbRating || !fbDb) return;
+    if(!fbRating || !FB_ENDPOINT) return;
     fbSubmit.disabled=true; fbSubmit.textContent='Sending…';
-    var rec = {
-      rating: fbRating,
-      comment: (fbCommentEl.value||'').trim().slice(0,300),
-      ts: new Date().toISOString(),
-      context: 'artifact',
-      app: 'map-your-work'
-    };
-    Promise.resolve(fbDb.doc('feedback/'+fbId()).set(rec)).then(function(){
-      fbCard.classList.add('done');
-      try{ localStorage.setItem('myw-fb-done','1'); }catch(e){}
-    }).catch(function(){
-      fbSubmit.disabled=false; fbSubmit.textContent='Send feedback';
-      toast('Could not send just now — please try again');
-    });
+    var rec = { rating: fbRating, comment: (fbCommentEl.value||'').trim().slice(0,300) };
+    fetch(FB_ENDPOINT, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(rec) })
+      .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json().catch(function(){ return {}; }); })
+      .then(function(){ fbCard.classList.add('done'); try{ localStorage.setItem('myw-fb-done','1'); }catch(e){} })
+      .catch(function(){ fbSubmit.disabled=false; fbSubmit.textContent='Send feedback'; toast('Could not send just now — please try again'); });
   });
 
-  function fbEnable(ns){
-    fbDb = ns;
+  function fbEnable(){
     fbCard.classList.add('on');
     var link=document.getElementById('fbLink'); if(link) link.classList.add('on');
     try{ if(localStorage.getItem('myw-fb-done')==='1') fbCard.classList.add('done'); }catch(e){}
@@ -2126,15 +2114,14 @@
     document.querySelector('.tab[data-view="prioritize"]').click();
     setTimeout(function(){ try{ fbCard.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }, 60);
   });
-  // Resolve the artifact database if we're running inside a Claude artifact.
-  if(window.claude && typeof window.claude.use==='function'){
-    try{ window.claude.use('db').then(function(ns){ if(ns) fbEnable(ns); }, function(){}); }catch(e){}
-  }
+  if(FB_ENDPOINT) fbEnable();
 
-  /* ---------------- Feedback dashboard (hidden · open at #dashboard) ----------------
-     Password is checked in the page, so it is a light gate, not real security.
-     Change the review password on the next line at any time. */
-  var DASH_PW = 'SNHU-pilot-2026';
+  /* ---------------- Feedback dashboard ----------------
+     Opens on the Vercel build only. The password is verified on the SERVER —
+     the entered value is sent to the backend, which checks it against the
+     DASHBOARD_PASSWORD env var. It is never stored in this page's code. */
+  var DASH_ADMIN = FB_ENDPOINT;
+  var dashKey = null;
 
   var dashOverlay=document.getElementById('dashOverlay');
   var dashModal=document.getElementById('dashModal');
@@ -2146,9 +2133,10 @@
   var dashRows=[];
 
   function openDash(){
+    if(!DASH_ADMIN) return;   // no backend (e.g. the artifact) → dashboard is inert
     dashErr.textContent=''; dashPwEl.value='';
-    var authed=false; try{ authed=sessionStorage.getItem('myw-dash')==='1'; }catch(e){}
-    if(authed){ dashShowPanel(); }
+    var k=null; try{ k=sessionStorage.getItem('myw-dash-key'); }catch(e){}
+    if(k){ dashKey=k; dashShowPanel(); dashLoad(); }
     else { dashGate.style.display='block'; dashPanel.style.display='none'; dashModal.classList.remove('wide'); setTimeout(function(){ dashPwEl.focus(); },50); }
     dashOverlay.classList.add('show');
   }
@@ -2156,36 +2144,34 @@
     dashOverlay.classList.remove('show');
     if(location.hash){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){ location.hash=''; } }
   }
+  function dashShowPanel(){ dashGate.style.display='none'; dashPanel.style.display='block'; dashModal.classList.add('wide'); }
+  function dashFetch(pw){
+    return fetch(DASH_ADMIN, { headers:{ 'x-dash-key': pw } }).then(function(r){
+      if(r.status===401) return Promise.reject({code:401});
+      if(!r.ok) return Promise.reject({code:r.status});
+      return r.json();
+    }).then(function(j){
+      var rows=(j && j.rows) ? j.rows : [];
+      return rows.filter(function(x){ return x && typeof x.rating==='number'; });
+    });
+  }
   function dashAuth(){
-    if(dashPwEl.value===DASH_PW){ try{ sessionStorage.setItem('myw-dash','1'); }catch(e){} dashShowPanel(); }
-    else { dashErr.textContent='Incorrect password.'; try{ dashPwEl.select(); }catch(e){} }
-  }
-  function dashShowPanel(){ dashGate.style.display='none'; dashPanel.style.display='block'; dashModal.classList.add('wide'); dashLoad(); }
-
-  function dashResolveDb(cb){
-    if(fbDb){ cb(fbDb); return; }
-    if(window.claude && typeof window.claude.use==='function'){
-      try{ window.claude.use('db').then(function(ns){ if(ns) fbDb=ns; cb(fbDb); }, function(){ cb(null); }); }catch(e){ cb(null); }
-    } else cb(null);
-  }
-  function normalizeDocs(res){
-    if(!res) return [];
-    var arr = Array.isArray(res) ? res : (res.docs || res.documents || []);
-    return arr.map(function(d){
-      if(d && typeof d.data==='function'){ var x=d.data()||{}; x.id=d.id; return x; }
-      if(d && d.data && typeof d.data==='object'){ var y={}; for(var k in d.data) y[k]=d.data[k]; y.id=d.id; return y; }
-      return d;
+    var pw=dashPwEl.value; if(!pw) return;
+    dashErr.textContent='Checking…';
+    dashFetch(pw).then(function(rows){
+      dashKey=pw; try{ sessionStorage.setItem('myw-dash-key', pw); }catch(e){}
+      dashRows=rows; dashErr.textContent=''; dashShowPanel(); renderDash();
+    }, function(err){
+      dashErr.textContent = (err && err.code===401) ? 'Incorrect password.' : 'Could not connect — try again.';
+      try{ dashPwEl.select(); }catch(e){}
     });
   }
   function dashLoad(){
+    if(!dashKey) return;
     dashBody.innerHTML='<div class="dash-empty">Loading…</div>';
-    dashResolveDb(function(db){
-      if(!db || !db.collection){ dashBody.innerHTML='<div class="dash-empty">Feedback data isn’t available here. Open the dashboard from the Claude artifact version of the tool.</div>'; return; }
-      var col; try{ col=db.collection('feedback'); }catch(e){ dashBody.innerHTML='<div class="dash-empty">Could not open the feedback data.</div>'; return; }
-      Promise.resolve().then(function(){ return col.get(); }).then(function(res){
-        dashRows=normalizeDocs(res).filter(function(r){ return r && typeof r.rating==='number'; });
-        renderDash();
-      }).catch(function(){ dashBody.innerHTML='<div class="dash-empty">Could not load feedback right now — try Refresh.</div>'; });
+    dashFetch(dashKey).then(function(rows){ dashRows=rows; renderDash(); }, function(err){
+      if(err && err.code===401){ dashBody.innerHTML='<div class="dash-empty">Session expired — close this and re-enter the password.</div>'; }
+      else dashBody.innerHTML='<div class="dash-empty">Could not load feedback right now — try Refresh.</div>';
     });
   }
   function dashStars(n){ n=Math.max(0,Math.min(5,Math.round(n))); return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n); }
@@ -2208,7 +2194,7 @@
     h+='<div class="dash-sec-h">Comments ('+withC.length+')</div>';
     if(!withC.length){ h+='<div class="dash-empty">No comments yet.</div>'; }
     else withC.forEach(function(r){ h+='<div class="cmt"><div class="cmt-top"><span class="cmt-stars">'+dashStars(r.rating)+'</span><span class="cmt-date">'+esc(dashDate(r.ts))+'</span></div><div class="cmt-text">'+esc((r.comment||'').trim())+'</div></div>'; });
-    h+='<div class="dash-caveat">Anonymous ratings from the Claude artifact version. This password is checked in the page and isn’t a strong security boundary.</div>';
+    h+='<div class="dash-caveat">Anonymous ratings from the web tool. The password is verified on the server, not stored in this page.</div>';
     dashBody.innerHTML=h;
   }
   function dashCsv(){
@@ -2226,6 +2212,22 @@
   dashOverlay.addEventListener('click', function(e){ if(e.target===dashOverlay) closeDash(); });
   function checkDashHash(){ if((location.hash||'').toLowerCase()==='#dashboard') openDash(); }
   window.addEventListener('hashchange', checkDashHash);
+  // Entry points that work INSIDE the sandboxed artifact iframe (where the URL hash isn't reachable):
+  // 1) keyboard shortcut Alt+Shift+D, 2) click the footer credit line 5x quickly.
+  document.addEventListener('keydown', function(e){
+    if(e.altKey && e.shiftKey && (e.key==='D' || e.key==='d')){ e.preventDefault(); openDash(); }
+  });
+  (function(){
+    var clicks=0, last=0, fb=document.getElementById('footBrand');
+    if(!fb) return;
+    fb.style.cursor='default';
+    fb.addEventListener('click', function(){
+      var now=Date.now();
+      if(now-last>2000) clicks=0;
+      last=now; clicks++;
+      if(clicks>=5){ clicks=0; openDash(); }
+    });
+  })();
 
   /* ---------------- Boot ---------------- */
   function boot(){
