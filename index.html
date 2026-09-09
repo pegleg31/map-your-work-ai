@@ -453,6 +453,36 @@
   .foot-rate.on{ display:inline-flex; }
   .foot-rate:hover{ border-color:var(--gold); }
 
+  /* feedback dashboard (hidden, password-gated, #dashboard) */
+  .dash-modal{ max-width:400px; transition:none; }
+  .dash-modal.wide{ max-width:720px; }
+  .dash-err{ color:var(--xout); font-size:12.5px; min-height:1.2em; margin:9px 0 0; font-weight:600; }
+  .dash-head{ display:flex; align-items:center; gap:12px; padding:16px 22px; background:var(--ink); color:#fff; }
+  .dash-head h2{ font-size:18px; margin:0; font-weight:800; }
+  .dash-head .dh-tools{ margin-left:auto; display:flex; gap:7px; }
+  .dash-head .dh-btn{ background:rgba(255,255,255,.16); border:none; color:#fff; border-radius:8px; padding:6px 11px; font-size:12px; font-weight:700; cursor:pointer; }
+  .dash-head .dh-btn:hover{ background:rgba(255,255,255,.32); }
+  .dash-body{ padding:20px 22px 22px; max-height:72vh; overflow:auto; }
+  .dash-tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:22px; }
+  .dash-tile{ background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px 15px; }
+  .dash-tile .dt-n{ font-size:27px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; color:var(--text); }
+  .dash-tile .dt-stars{ color:var(--gold); font-size:15px; margin-top:5px; letter-spacing:1px; }
+  .dash-tile .dt-l{ font-size:10.5px; color:var(--text-soft); font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-top:6px; }
+  .dist{ display:flex; flex-direction:column; gap:7px; margin-bottom:22px; }
+  .dist-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; }
+  .dist-row .dr-lab{ width:30px; color:var(--text-soft); font-weight:700; white-space:nowrap; }
+  .dist-row .dr-bar{ flex:1; height:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .dist-row .dr-fill{ height:100%; background:var(--gold); }
+  .dist-row .dr-c{ width:26px; text-align:right; font-variant-numeric:tabular-nums; color:var(--text); font-weight:700; }
+  .dash-sec-h{ font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:800; color:var(--text-soft); margin:0 0 11px; }
+  .cmt{ background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .cmt .cmt-top{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .cmt .cmt-stars{ color:var(--gold); font-size:12px; letter-spacing:1px; }
+  .cmt .cmt-date{ font-size:10.5px; color:var(--text-faint); margin-left:auto; }
+  .cmt .cmt-text{ font-size:13px; color:var(--text); line-height:1.45; word-break:break-word; }
+  .dash-empty{ color:var(--text-faint); font-style:italic; font-size:13px; padding:12px 0; }
+  .dash-caveat{ font-size:11px; color:var(--text-faint); line-height:1.5; margin-top:18px; padding-top:13px; border-top:1px solid var(--border); }
+
   /* buttons */
   .btn {
     display:inline-flex; align-items:center; gap:8px; justify-content:center;
@@ -891,6 +921,36 @@
         <button class="btn ghost" id="introBack">Back</button>
         <button class="btn primary" id="introNext" style="flex:1">Next</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay: feedback dashboard (hidden; reached at #dashboard) -->
+<div class="overlay" id="dashOverlay">
+  <div class="modal dash-modal" id="dashModal" role="dialog" aria-modal="true" aria-labelledby="dashTitle">
+    <div id="dashGate">
+      <div class="modal-top" style="background:var(--ink)">
+        <button class="modal-x" id="dashX" aria-label="Close">✕</button>
+        <span class="mt-eye">Restricted · Pilot review</span>
+        <h1 id="dashTitle" style="font-size:20px">Feedback dashboard</h1>
+        <p>Enter the review password to view pilot feedback.</p>
+      </div>
+      <div class="modal-body">
+        <input class="txt" id="dashPw" type="password" placeholder="Password" autocomplete="off" />
+        <div class="dash-err" id="dashErr"></div>
+        <div class="modal-actions"><button class="btn primary" id="dashEnter" style="flex:1">View feedback →</button></div>
+      </div>
+    </div>
+    <div id="dashPanel" style="display:none">
+      <div class="dash-head">
+        <h2>Pilot feedback</h2>
+        <div class="dh-tools">
+          <button class="dh-btn" id="dashCopy">Copy CSV</button>
+          <button class="dh-btn" id="dashRefresh">Refresh</button>
+          <button class="dh-btn" id="dashClose">Close</button>
+        </div>
+      </div>
+      <div class="dash-body" id="dashBody"></div>
     </div>
   </div>
 </div>
@@ -1999,7 +2059,7 @@
   }
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
-      closePop(); closeInfo(); hideTip(); closeMenu(); closeIntro(); closeMove();
+      closePop(); closeInfo(); hideTip(); closeMenu(); closeIntro(); closeMove(); closeDash();
       if(document.getElementById('overlay')._editing) closeRoleModal();
     }
   });
@@ -2071,6 +2131,102 @@
     try{ window.claude.use('db').then(function(ns){ if(ns) fbEnable(ns); }, function(){}); }catch(e){}
   }
 
+  /* ---------------- Feedback dashboard (hidden · open at #dashboard) ----------------
+     Password is checked in the page, so it is a light gate, not real security.
+     Change the review password on the next line at any time. */
+  var DASH_PW = 'SNHU-pilot-2026';
+
+  var dashOverlay=document.getElementById('dashOverlay');
+  var dashModal=document.getElementById('dashModal');
+  var dashGate=document.getElementById('dashGate');
+  var dashPanel=document.getElementById('dashPanel');
+  var dashPwEl=document.getElementById('dashPw');
+  var dashErr=document.getElementById('dashErr');
+  var dashBody=document.getElementById('dashBody');
+  var dashRows=[];
+
+  function openDash(){
+    dashErr.textContent=''; dashPwEl.value='';
+    var authed=false; try{ authed=sessionStorage.getItem('myw-dash')==='1'; }catch(e){}
+    if(authed){ dashShowPanel(); }
+    else { dashGate.style.display='block'; dashPanel.style.display='none'; dashModal.classList.remove('wide'); setTimeout(function(){ dashPwEl.focus(); },50); }
+    dashOverlay.classList.add('show');
+  }
+  function closeDash(){
+    dashOverlay.classList.remove('show');
+    if(location.hash){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){ location.hash=''; } }
+  }
+  function dashAuth(){
+    if(dashPwEl.value===DASH_PW){ try{ sessionStorage.setItem('myw-dash','1'); }catch(e){} dashShowPanel(); }
+    else { dashErr.textContent='Incorrect password.'; try{ dashPwEl.select(); }catch(e){} }
+  }
+  function dashShowPanel(){ dashGate.style.display='none'; dashPanel.style.display='block'; dashModal.classList.add('wide'); dashLoad(); }
+
+  function dashResolveDb(cb){
+    if(fbDb){ cb(fbDb); return; }
+    if(window.claude && typeof window.claude.use==='function'){
+      try{ window.claude.use('db').then(function(ns){ if(ns) fbDb=ns; cb(fbDb); }, function(){ cb(null); }); }catch(e){ cb(null); }
+    } else cb(null);
+  }
+  function normalizeDocs(res){
+    if(!res) return [];
+    var arr = Array.isArray(res) ? res : (res.docs || res.documents || []);
+    return arr.map(function(d){
+      if(d && typeof d.data==='function'){ var x=d.data()||{}; x.id=d.id; return x; }
+      if(d && d.data && typeof d.data==='object'){ var y={}; for(var k in d.data) y[k]=d.data[k]; y.id=d.id; return y; }
+      return d;
+    });
+  }
+  function dashLoad(){
+    dashBody.innerHTML='<div class="dash-empty">Loading…</div>';
+    dashResolveDb(function(db){
+      if(!db || !db.collection){ dashBody.innerHTML='<div class="dash-empty">Feedback data isn’t available here. Open the dashboard from the Claude artifact version of the tool.</div>'; return; }
+      var col; try{ col=db.collection('feedback'); }catch(e){ dashBody.innerHTML='<div class="dash-empty">Could not open the feedback data.</div>'; return; }
+      Promise.resolve().then(function(){ return col.get(); }).then(function(res){
+        dashRows=normalizeDocs(res).filter(function(r){ return r && typeof r.rating==='number'; });
+        renderDash();
+      }).catch(function(){ dashBody.innerHTML='<div class="dash-empty">Could not load feedback right now — try Refresh.</div>'; });
+    });
+  }
+  function dashStars(n){ n=Math.max(0,Math.min(5,Math.round(n))); return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n); }
+  function dashDate(ts){ try{ return new Date(ts).toLocaleString(); }catch(e){ return ts||''; } }
+  function renderDash(){
+    var rows=dashRows.slice().sort(function(a,b){ return (b.ts||'').localeCompare(a.ts||''); });
+    var n=rows.length, sum=0, dist=[0,0,0,0,0], pos=0;
+    rows.forEach(function(r){ var v=Math.max(1,Math.min(5,Math.round(r.rating))); sum+=v; dist[v-1]++; if(v>=4) pos++; });
+    var avg=n?sum/n:0;
+    var h='<div class="dash-tiles">';
+    h+='<div class="dash-tile"><div class="dt-n">'+n+'</div><div class="dt-l">Responses</div></div>';
+    h+='<div class="dash-tile"><div class="dt-n">'+(n?avg.toFixed(1):'–')+'</div><div class="dt-stars">'+(n?dashStars(avg):'')+'</div><div class="dt-l">Average</div></div>';
+    h+='<div class="dash-tile"><div class="dt-n">'+(n?Math.round(pos/n*100)+'%':'–')+'</div><div class="dt-l">Rated 4★ or higher</div></div>';
+    h+='</div>';
+    var maxc=Math.max(1,dist[0],dist[1],dist[2],dist[3],dist[4]);
+    h+='<div class="dash-sec-h">Rating distribution</div><div class="dist">';
+    for(var s=5;s>=1;s--){ var c=dist[s-1]; h+='<div class="dist-row"><span class="dr-lab">'+s+'★</span><span class="dr-bar"><span class="dr-fill" style="width:'+(c/maxc*100)+'%"></span></span><span class="dr-c">'+c+'</span></div>'; }
+    h+='</div>';
+    var withC=rows.filter(function(r){ return (r.comment||'').trim(); });
+    h+='<div class="dash-sec-h">Comments ('+withC.length+')</div>';
+    if(!withC.length){ h+='<div class="dash-empty">No comments yet.</div>'; }
+    else withC.forEach(function(r){ h+='<div class="cmt"><div class="cmt-top"><span class="cmt-stars">'+dashStars(r.rating)+'</span><span class="cmt-date">'+esc(dashDate(r.ts))+'</span></div><div class="cmt-text">'+esc((r.comment||'').trim())+'</div></div>'; });
+    h+='<div class="dash-caveat">Anonymous ratings from the Claude artifact version. This password is checked in the page and isn’t a strong security boundary.</div>';
+    dashBody.innerHTML=h;
+  }
+  function dashCsv(){
+    var rows=dashRows.slice().sort(function(a,b){ return (b.ts||'').localeCompare(a.ts||''); });
+    var out='rating,comment,timestamp,context\n';
+    rows.forEach(function(r){ out+=[r.rating, '"'+String(r.comment||'').replace(/"/g,'""')+'"', r.ts||'', r.context||''].join(',')+'\n'; });
+    return out;
+  }
+  document.getElementById('dashEnter').onclick=dashAuth;
+  dashPwEl.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); dashAuth(); } });
+  document.getElementById('dashX').onclick=closeDash;
+  document.getElementById('dashClose').onclick=closeDash;
+  document.getElementById('dashRefresh').onclick=dashLoad;
+  document.getElementById('dashCopy').onclick=function(){ copyText(dashCsv(), 'Feedback copied as CSV'); };
+  dashOverlay.addEventListener('click', function(e){ if(e.target===dashOverlay) closeDash(); });
+  function checkDashHash(){ if((location.hash||'').toLowerCase()==='#dashboard') openDash(); }
+  window.addEventListener('hashchange', checkDashHash);
+
   /* ---------------- Boot ---------------- */
   function boot(){
     renderLegendGlyphs();
@@ -2081,6 +2237,7 @@
       state=defaultState('','general'); // placeholder until modal completes
       openRoleModal(false);
     }
+    checkDashHash();
   }
   boot();
 })();
